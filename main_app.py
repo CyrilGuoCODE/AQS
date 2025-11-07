@@ -68,14 +68,8 @@ def logout():
     return redirect('/login')
 
 
-@app.route('/register')
-def register():
-    """注册页面"""
-    return render_template('register.html')
-
-
 @app.route('/handle', methods=['POST'])
-@limiter.limit('10 per hour, 1 per 5seconds')
+@limiter.limit('1 per 5 seconds,10 per hour')
 def handle():
     """处理登录/注册表单"""
     if request.form['type'] == '登录':
@@ -88,10 +82,16 @@ def handle():
         return {'state': 'error', 'message': '未知错误'}
 
 
-@app.route('/home')
-def home():
+@app.route('/parent')
+def parent():
     """注册页面"""
-    return render_template('home.html')
+    return render_template('parent.html')
+
+
+@app.route('/teacher')
+def teacher():
+    """注册页面"""
+    return render_template('teacher.html')
 
 
 # ==================== 错误处理 ====================
