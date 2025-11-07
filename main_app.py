@@ -9,6 +9,8 @@ import time
 # ==================== 初始化配置 ====================
 app = Flask(__name__)
 app.secret_key = 'akjbqid'
+app.config['PARENT_KEY'] = 'parent'
+app.config['TEACHER_KEY'] = 'teacher'
 
 
 # 初始化速率限制器
@@ -61,6 +63,23 @@ def login():
     return render_template('login.html')
 
 
+@app.route('/verify-key', methods=['POST'])
+@limiter.limit('1 per 5 seconds,10 per hour')
+def verify_key():
+    key = request.json['key'].strip()
+
+    if key == app.config['PARENT_KEY']:
+        session['parent_verified'] = True
+        session['role'] = 'parent'
+        return jsonify({'success': True, 'role': 'parent'})
+    elif key == app.config['TEACHER_KEY']:
+        session['teacher_verified'] = True
+        session['role'] = 'teacher'
+        return jsonify({'success': True, 'role': 'teacher'})
+    else:
+        return jsonify({'success': False, 'message': '密钥错误，请重新输入'})
+
+
 @app.route('/logout')
 def logout():
     """退出登录"""
@@ -68,29 +87,17 @@ def logout():
     return redirect('/login')
 
 
-@app.route('/handle', methods=['POST'])
-@limiter.limit('1 per 5 seconds,10 per hour')
-def handle():
-    """处理登录/注册表单"""
-    if request.form['type'] == '登录':
-        return {'state': 'success'}
-
-    elif request.form['type'] == '注册':
-        return {'state': 'success'}
-
-    else:
-        return {'state': 'error', 'message': '未知错误'}
-
-
 @app.route('/parent')
 def parent():
-    """注册页面"""
+    if not session.get('parent_verified'):
+        return redirect('/login')
     return render_template('parent.html')
 
 
 @app.route('/teacher')
 def teacher():
-    """注册页面"""
+    if not session.get('teacher_verified'):
+        return redirect('/login')
     return render_template('teacher.html')
 
 
