@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家长会预约系统 - 家长端</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div id="app">
+        <div id="name-screen" class="screen active">
+            <div class="container">
+                <h2>请输入孩子姓名</h2>
+                <div class="name-input-wrapper">
+                    <input type="text" id="student-name-input" placeholder="请输入孩子姓名" autocomplete="off">
+                    <button id="name-submit-btn">确认</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="notice-modal" class="modal">
+            <div class="modal-content">
+                <h3>预约须知</h3>
+                <div class="notice-content">
+                    <p>1. 每位家长最多可预约3位老师</p>
+                    <p>2. 请根据前方等待人数合理安排时间</p>
+                    <p>3. 预约成功后请按时前往指定位置</p>
+                    <p>4. 如需取消预约，请联系管理员</p>
+                </div>
+                <div class="countdown">
+                    <span id="countdown-text">5秒后自动关闭</span>
+                </div>
+                <button id="close-notice-btn" class="close-btn" disabled>关闭</button>
+            </div>
+        </div>
+
+        <div id="teacher-screen" class="screen">
+            <div class="container">
+                <div class="header-info">
+                    <h2>选择预约老师</h2>
+                    <p class="selected-count">已选择: <span id="selected-count">0</span>/3</p>
+                </div>
+                <div id="teacher-grid" class="teacher-grid"></div>
+                <button id="submit-btn" class="submit-btn" disabled>提交预约</button>
+            </div>
+        </div>
+
+        <div id="schedule-screen" class="screen">
+            <div class="container">
+                <h2>预约成功</h2>
+                <div class="schedule-info">
+                    <p class="info-item"><strong>家长姓名:</strong> <span id="parent-name-display"></span></p>
+                    <p class="info-item"><strong>孩子姓名:</strong> <span id="student-name-display"></span></p>
+                </div>
+                <div id="schedule-list" class="schedule-list"></div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/parent.js') }}"></script>
+</body>
+</html>
