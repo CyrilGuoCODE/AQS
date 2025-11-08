@@ -11,7 +11,35 @@
         <div id="teacher-dashboard-screen" class="screen active">
             <div class="container">
                 <h2>老师管理面板</h2>
-                <p class="info-text">老师端功能正在开发中...</p>
+                
+                <div class="teacher-select-wrapper">
+                    <label for="teacher-select">选择老师:</label>
+                    <select id="teacher-select" class="teacher-select">
+                        <option value="">请选择老师</option>
+                    </select>
+                </div>
+
+                <div id="queue-display" class="queue-display" style="display: none;">
+                    <div class="current-parent-section">
+                        <h3>当前谈话家长</h3>
+                        <div id="current-parent" class="current-parent-card">
+                        </div>
+                        <div class="action-buttons">
+                            <button id="skip-btn" class="skip-btn">跳过</button>
+                            <button id="complete-btn" class="complete-btn">标记已完成</button>
+                        </div>
+                    </div>
+
+                    <div class="waiting-queue-section">
+                        <h3>等待队列（后3位）</h3>
+                        <div id="waiting-queue" class="waiting-queue">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="empty-queue" class="empty-queue" style="display: none;">
+                    <p class="info-text">当前没有等待的家长</p>
+                </div>
             </div>
         </div>
     </div>

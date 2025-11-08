@@ -4,11 +4,12 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_limiter import Limiter
 import pymongo
 import time
+import secrets
 
 
 # ==================== 初始化配置 ====================
 app = Flask(__name__)
-app.secret_key = 'akjbqid'
+app.secret_key = secrets.token_hex(16)
 app.config['PARENT_KEY'] = 'parent'
 app.config['TEACHER_KEY'] = 'teacher'
 
