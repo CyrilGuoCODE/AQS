@@ -59,7 +59,6 @@ def favicon():
 
 @app.route('/login')
 def login():
-    """登录页面"""
     return render_template('login.html')
 
 
@@ -67,7 +66,6 @@ def login():
 @limiter.limit('1 per 5 seconds,10 per hour')
 def verify_key():
     key = request.json['key'].strip()
-
     if key == app.config['PARENT_KEY']:
         session['parent_verified'] = True
         session['role'] = 'parent'
@@ -80,9 +78,21 @@ def verify_key():
         return jsonify({'success': False, 'message': '密钥错误，请重新输入'})
 
 
+@app.route('/handle', methods=['POST'])
+@limiter.limit('1 per 5 seconds,10 per hour')
+def handle():
+    if 'parent_verified' in session:
+        session['name'] = request.json['name']
+        return jsonify({'success': True, 'role': 'parent'})
+    elif 'teacher_verified' in session:
+        session['name'] = request.json['name']
+        return jsonify({'success': True, 'role': 'teacher'})
+    else:
+        return jsonify({'success': False, 'message': '密钥错误，请重新输入'})
+
+
 @app.route('/logout')
 def logout():
-    """退出登录"""
     session.clear()
     return redirect('/login')
 
@@ -105,7 +115,7 @@ def teacher():
 @app.errorhandler(404)
 def handle_404(error):
     """错误处理-404"""
-    return redirect('/home')
+    return redirect('/login')
 
 
 @app.errorhandler(Exception)
@@ -149,5 +159,4 @@ def ratelimit_handler(e):
 
 # ==================== 启动应用 ====================
 if __name__ == '__main__':
-    # 根据配置决定是否启用SSL
     socketio.run(app, host='127.0.0.1', port=5001, debug=True)

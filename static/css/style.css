@@ -315,7 +315,6 @@ button:disabled {
 @media (max-width: 768px) {
     #app {
         padding: 10px;
-        align-items: flex-start;
     }
 
     .container {
