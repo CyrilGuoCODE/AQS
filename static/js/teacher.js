@@ -1,13 +1,5 @@
-const teachers = [
-    { id: 1, name: '1老师', class: '8年级1班', location: '教学楼111' },
-    { id: 2, name: '2老师', class: '8年级2班', location: '教学楼222' },
-    { id: 3, name: '3老师', class: '8年级1班', location: '教学楼333' },
-    { id: 4, name: '4老师', class: '8年级2班', location: '教学楼444' },
-    { id: 5, name: '5老师', class: '8年级1班', location: '教学楼555' },
-    { id: 6, name: '6老师', class: '8年级2班', location: '教学楼666' },
-    { id: 7, name: '7老师', class: '8年级1班', location: '教学楼777' },
-    { id: 8, name: '8老师', class: '8年级2班', location: '教学楼888' }
-];
+// teachers loaded from backend
+let teachers = [];
 
 let queues = {
     1: [
@@ -125,6 +117,12 @@ function completeCurrentParent(teacherId) {
         }
         
         renderQueue(teacherId);
+        // 通知家长更新（如有 socket 连接）
+        try {
+            if (window.appSocket) {
+                window.appSocket.emit('message', { room: 'parent', message: 'queue-updated' });
+            }
+        } catch (e) {}
     }
 }
 
@@ -151,13 +149,41 @@ function skipCurrentParent(teacherId) {
         }
         
         renderQueue(teacherId);
+        // 通知家长更新（如有 socket 连接）
+        try {
+            if (window.appSocket) {
+                window.appSocket.emit('message', { room: 'parent', message: 'queue-updated' });
+            }
+        } catch (e) {}
     }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    initTeacherSelect();
-    
-    const teacherSelect = document.getElementById('teacher-select');
+    // 先加载老师列表
+    fetch('/api/teachers').then(r => r.json()).then(data => {
+        if (data && Array.isArray(data.teachers)) {
+            teachers = data.teachers;
+        }
+        initTeacherSelect();
+
+        // 获取服务端 session 并建立 websocket 连接
+        fetch('/user').then(r => r.json()).then(info => {
+            try {
+                const socket = io();
+                window.appSocket = socket;
+                socket.on('connect', () => {
+                    const name = (info && info.name) ? info.name : '老师';
+                    socket.emit('join', { role: 'teacher', name: name });
+                });
+                socket.on('message', data => {
+                    console.log('ws message', data);
+                });
+            } catch (e) {
+                console.warn('Socket.IO 未连接', e);
+            }
+        }).catch(() => {});
+
+        const teacherSelect = document.getElementById('teacher-select');
     teacherSelect.addEventListener('change', function() {
         const teacherId = parseInt(this.value);
         if (teacherId) {
@@ -181,4 +207,5 @@ document.addEventListener('DOMContentLoaded', function() {
             skipCurrentParent(teacherId);
         }
     });
+    }).catch(() => {});
 });
