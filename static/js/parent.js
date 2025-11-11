@@ -54,7 +54,7 @@ function showNoticeModal() {
         if (countdown > 0) {
             countdownText.textContent = `${countdown}秒后自动关闭`;
         } else {
-            countdownText.textContent = '可以关闭了';
+            countdownText.textContent = '';
             closeBtn.disabled = false;
             clearInterval(countdownTimer);
         }
