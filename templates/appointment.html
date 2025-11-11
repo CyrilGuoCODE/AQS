@@ -13,10 +13,9 @@
             <div class="modal-content">
                 <h3>预约须知</h3>
                 <div class="notice-content">
-                    <p>1. 每位家长最多可预约2位老师</p>
-                    <p>2. 请根据前方等待人数合理安排时间</p>
-                    <p>3. 预约成功后请按时前往指定位置</p>
-                    <p>4. 如需取消预约，请联系管理员</p>
+                    {% for i in t_notice %}
+                    <p>{{i}}</p>
+                    {% endfor %}
                 </div>
                 <div class="countdown">
                     <span id="countdown-text">5秒后自动关闭</span>
@@ -47,7 +46,10 @@
             </div>
         </div>
     </div>
+    <script>
+        const teachers = {{ t_teacher | tojson | safe }}
+    </script>
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/parent.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/appointment.js') }}"></script>
 </body>
 </html>
