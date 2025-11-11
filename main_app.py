@@ -109,7 +109,17 @@ def logout():
 def parent():
     if not session.get('parent_verified'):
         return redirect('/login')
-    return render_template('parent.html', t_teacher=teachers, t_notice=notice)
+    # data = db['parent'].find_one({'name': session['name']})
+    data = []
+    session['name'] = ''
+    return render_template('parent.html', t_name=session['name'], t_data=data)
+
+
+@app.route('/appointment')
+def appointment():
+    if not session.get('parent_verified'):
+        return redirect('/login')
+    return render_template('appointment.html', t_teacher=teachers, t_notice=notice)
 
 
 @app.route('/teacher')
