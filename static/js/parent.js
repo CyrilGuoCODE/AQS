@@ -1,5 +1,13 @@
-// teachers will be loaded from backend /api/teachers
-let teachers = [];
+const teachers = [
+    { id: 1, name: '1老师', class: '8年级1班', location: '教学楼111', waiting: 0 },
+    { id: 2, name: '2老师', class: '8年级2班', location: '教学楼222', waiting: 2 },
+    { id: 3, name: '3老师', class: '8年级1班', location: '教学楼333', waiting: 1 },
+    { id: 4, name: '4老师', class: '8年级2班', location: '教学楼444', waiting: 3 },
+    { id: 5, name: '5老师', class: '8年级1班', location: '教学楼555', waiting: 0 },
+    { id: 6, name: '6老师', class: '8年级2班', location: '教学楼666', waiting: 1 },
+    { id: 7, name: '7老师', class: '8年级1班', location: '教学楼777', waiting: 2 },
+    { id: 8, name: '8老师', class: '8年级2班', location: '教学楼888', waiting: 0 }
+];
 
 let selectedTeachers = [];
 let parentName = '';
@@ -25,16 +33,7 @@ function submitStudentName() {
     studentName = name;
     localStorage.setItem('studentName', studentName);
     localStorage.setItem('parentName', parentName);
-
-    // 将 parent name 写入服务端 session，便于后端记录
-    fetch('/handle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: parentName })
-    }).then(r => r.json()).then(resp => {
-        // 忽略返回，继续本地流程
-    }).catch(() => {});
-
+    
     nameInput.value = '';
     showNoticeModal();
 }
@@ -172,80 +171,26 @@ function formatTime(minutes) {
 
 document.addEventListener('DOMContentLoaded', function() {
     parentName = '家长';
+    if (localStorage.getItem('parentName')) {
+        parentName = localStorage.getItem('parentName');
+    }
+    const savedStudentName = localStorage.getItem('studentName');
+    if (savedStudentName) {
+        studentName = savedStudentName;
+        showNoticeModal();
+    } else {
+        showScreen('name-screen');
+    }
 
-    // 从服务端获取 session 信息以便联调
-    fetch('/user').then(resp => resp.json()).then(info => {
-        if (info && info.name) {
-            parentName = info.name;
-            localStorage.setItem('parentName', parentName);
-        } else if (localStorage.getItem('parentName')) {
-            parentName = localStorage.getItem('parentName');
+    document.getElementById('student-name-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            submitStudentName();
         }
-
-        // 建立 websocket 连接并加入 parent 房间
-        try {
-            const socket = io();
-            window.appSocket = socket;
-            socket.on('connect', () => {
-                socket.emit('join', { role: 'parent', name: parentName });
-            });
-            socket.on('joined', data => {
-                console.log('joined', data);
-            });
-            socket.on('message', data => {
-                if (data && data.message === 'queue-updated') {
-                    // 简单提示，或根据业务刷新界面
-                    alert('队列已更新，请刷新页面查看');
-                }
-            });
-        } catch (e) {
-            console.warn('Socket.IO 未连接:', e);
-        }
-
-        // 加载老师列表（包含动态 waiting）
-        fetch('/api/teachers').then(r => r.json()).then(data => {
-            if (data && Array.isArray(data.teachers)) {
-                teachers = data.teachers;
-            }
-            const savedStudentName = localStorage.getItem('studentName');
-            if (savedStudentName) {
-                studentName = savedStudentName;
-                showNoticeModal();
-            } else {
-                showScreen('name-screen');
-            }
-        }).catch(() => {
-            const savedStudentName = localStorage.getItem('studentName');
-            if (savedStudentName) {
-                studentName = savedStudentName;
-                showNoticeModal();
-            } else {
-                showScreen('name-screen');
-            }
-        });
-    }).catch(() => {
-        // 回退到本地缓存
-        if (localStorage.getItem('parentName')) {
-            parentName = localStorage.getItem('parentName');
-        }
-        const savedStudentName = localStorage.getItem('studentName');
-        if (savedStudentName) {
-            studentName = savedStudentName;
-            showNoticeModal();
-        } else {
-            showScreen('name-screen');
-        }
-    }).finally(() => {
-        document.getElementById('student-name-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                submitStudentName();
-            }
-        });
-
-        document.getElementById('name-submit-btn').addEventListener('click', submitStudentName);
-
-        document.getElementById('close-notice-btn').addEventListener('click', closeNoticeModal);
-
-        document.getElementById('submit-btn').addEventListener('click', submitAppointment);
     });
+
+    document.getElementById('name-submit-btn').addEventListener('click', submitStudentName);
+
+    document.getElementById('close-notice-btn').addEventListener('click', closeNoticeModal);
+
+    document.getElementById('submit-btn').addEventListener('click', submitAppointment);
 });
