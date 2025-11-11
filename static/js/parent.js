@@ -1,14 +1,3 @@
-const teachers = [
-    { id: 1, name: '1老师', class: '8年级1班', location: '教学楼111', waiting: 0 },
-    { id: 2, name: '2老师', class: '8年级2班', location: '教学楼222', waiting: 2 },
-    { id: 3, name: '3老师', class: '8年级1班', location: '教学楼333', waiting: 1 },
-    { id: 4, name: '4老师', class: '8年级2班', location: '教学楼444', waiting: 3 },
-    { id: 5, name: '5老师', class: '8年级1班', location: '教学楼555', waiting: 0 },
-    { id: 6, name: '6老师', class: '8年级2班', location: '教学楼666', waiting: 1 },
-    { id: 7, name: '7老师', class: '8年级1班', location: '教学楼777', waiting: 2 },
-    { id: 8, name: '8老师', class: '8年级2班', location: '教学楼888', waiting: 0 }
-];
-
 let selectedTeachers = [];
 let parentName = '';
 let studentName = '';

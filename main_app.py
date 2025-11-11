@@ -5,6 +5,7 @@ from flask_limiter import Limiter
 import pymongo
 import time
 import secrets
+import json
 
 
 # ==================== 初始化配置 ====================
@@ -40,6 +41,12 @@ socketio = SocketIO(app, ping_interval=5, ping_timeout=20)
 # 数据库连接
 client = pymongo.MongoClient(mongodb_uri)
 db = client['main']
+
+with open('teacher.json', 'r', encoding='utf-8') as f:
+    teachers = json.load(f)
+
+with open('notice.txt', 'r', encoding='utf-8') as file:
+    notice = file.readlines()
 
 
 # ==================== Flask路由 ====================
@@ -102,7 +109,7 @@ def logout():
 def parent():
     if not session.get('parent_verified'):
         return redirect('/login')
-    return render_template('parent.html')
+    return render_template('parent.html', t_teacher=teachers, t_notice=notice)
 
 
 @app.route('/teacher')
