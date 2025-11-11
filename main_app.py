@@ -5,10 +5,7 @@ from flask_limiter import Limiter
 import pymongo
 import time
 import secrets
-import os
-import logging
-from pathlib import Path
-import json
+
 
 # ==================== 初始化配置 ====================
 app = Flask(__name__)
@@ -36,9 +33,6 @@ limiter = Limiter(
     key_func=get_real_ip,
     storage_uri=mongodb_uri
 )
-
-Path('log').mkdir(parents=True, exist_ok=True)
-logging.basicConfig(filename='log/error.log', level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
 # 初始化SocketIO
 socketio = SocketIO(app, ping_interval=5, ping_timeout=20)
@@ -117,55 +111,6 @@ def teacher():
         return redirect('/login')
     return render_template('teacher.html')
 
-
-@app.route('/user')
-def user_info():
-    """返回当前 session 的基本信息，便于前端联调使用。"""
-    return jsonify({
-        'parent_verified': bool(session.get('parent_verified')),
-        'teacher_verified': bool(session.get('teacher_verified')),
-        'role': session.get('role'),
-        'name': session.get('name')
-    })
-
-
-@app.route('/api/teachers')
-def api_teachers():
-    """Return list of teachers read from teacher.json with dynamic waiting count from DB.
-    Format: { teachers: [ {id, name, class, location, waiting}, ... ] }
-    """
-    try:
-        with open('teacher.json', 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    except Exception as e:
-        logging.exception('Failed to load teacher.json: %s', e)
-        return jsonify({'teachers': []})
-
-    result = []
-    for key, info in data.items():
-        try:
-            tid = int(key)
-        except Exception:
-            continue
-        waiting = 0
-        try:
-            # Expecting a 'queues' collection where documents reference teacher_id and status
-            waiting = db.queues.count_documents({'teacher_id': tid, 'status': 'waiting'})
-        except Exception:
-            # If the collection doesn't exist or Mongo error, fallback to 0
-            waiting = 0
-
-        result.append({
-            'id': tid,
-            'name': info.get('name'),
-            'class': info.get('class'),
-            'location': info.get('location'),
-            'waiting': waiting
-        })
-
-    # sort by id
-    result.sort(key=lambda x: x['id'])
-    return jsonify({'teachers': result})
 
 # ==================== 错误处理 ====================
 @app.errorhandler(404)
