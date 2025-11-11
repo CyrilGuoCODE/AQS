@@ -77,26 +77,37 @@ def verify_key():
     if key == app.config['PARENT_KEY']:
         session['parent_verified'] = True
         session['role'] = 'parent'
+        limiter.reset()
         return jsonify({'success': True, 'role': 'parent'})
     elif key == app.config['TEACHER_KEY']:
         session['teacher_verified'] = True
         session['role'] = 'teacher'
+        limiter.reset()
         return jsonify({'success': True, 'role': 'teacher'})
     else:
         return jsonify({'success': False, 'message': '密钥错误，请重新输入'})
+
+
+@app.route('/get_teachers')
+def get_teachers():
+    if not session.get('teacher_verified'):
+        return redirect('/login')
+    return jsonify(teachers)
 
 
 @app.route('/handle', methods=['POST'])
 @limiter.limit('1 per 5 seconds,10 per hour')
 def handle():
-    if 'parent_verified' in session:
+    if session['role'] == 'parent' and 'parent_verified' in session:
         session['name'] = request.json['name']
-        return jsonify({'success': True, 'role': 'parent'})
-    elif 'teacher_verified' in session:
+        limiter.reset()
+        return jsonify({'success': True})
+    elif session['role'] == 'teacher' and 'teacher_verified' in session:
         session['name'] = request.json['name']
-        return jsonify({'success': True, 'role': 'teacher'})
+        limiter.reset()
+        return jsonify({'success': True})
     else:
-        return jsonify({'success': False, 'message': '密钥错误，请重新输入'})
+        return jsonify({'success': False, 'message': '登录失败，请重试'})
 
 
 @app.route('/logout')
@@ -111,7 +122,6 @@ def parent():
         return redirect('/login')
     # data = db['parent'].find_one({'name': session['name']})
     data = []
-    session['name'] = ''
     return render_template('parent.html', t_name=session['name'], t_data=data)
 
 
@@ -119,7 +129,7 @@ def parent():
 def appointment():
     if not session.get('parent_verified'):
         return redirect('/login')
-    return render_template('appointment.html', t_teacher=teachers, t_notice=notice)
+    return render_template('appointment.html', t_name=session['name'], t_teacher=teachers, t_notice=notice)
 
 
 @app.route('/teacher')
@@ -172,7 +182,7 @@ def ratelimit_handler(e):
     with open('log/limit.log', 'a', encoding='utf-8') as f:
         f.write(limit_msg)
 
-    return {'state': 'error', 'message': '请求过于频繁'}
+    return {'success': False, 'message': '请求过于频繁'}
 
 
 # ==================== 启动应用 ====================

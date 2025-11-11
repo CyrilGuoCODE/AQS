@@ -1,5 +1,4 @@
 let selectedTeachers = [];
-let parentName = '';
 let studentName = '';
 let countdownTimer = null;
 
@@ -8,23 +7,6 @@ function showScreen(screenId) {
         screen.classList.remove('active');
     });
     document.getElementById(screenId).classList.add('active');
-}
-
-function submitStudentName() {
-    const nameInput = document.getElementById('student-name-input');
-    const name = nameInput.value.trim();
-
-    if (!name) {
-        alert('请输入孩子姓名');
-        return;
-    }
-
-    studentName = name;
-    localStorage.setItem('studentName', studentName);
-    localStorage.setItem('parentName', parentName);
-
-    nameInput.value = '';
-    showNoticeModal();
 }
 
 function showNoticeModal() {
@@ -159,25 +141,7 @@ function formatTime(minutes) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    parentName = '家长';
-    if (localStorage.getItem('parentName')) {
-        parentName = localStorage.getItem('parentName');
-    }
-    const savedStudentName = localStorage.getItem('studentName');
-    if (savedStudentName) {
-        studentName = savedStudentName;
-        showNoticeModal();
-    } else {
-        showScreen('name-screen');
-    }
-
-    document.getElementById('student-name-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            submitStudentName();
-        }
-    });
-
-    document.getElementById('name-submit-btn').addEventListener('click', submitStudentName);
+    showNoticeModal();
 
     document.getElementById('close-notice-btn').addEventListener('click', closeNoticeModal);
 

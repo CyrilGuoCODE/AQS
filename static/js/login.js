@@ -103,12 +103,12 @@ function submitStudentName() {
         return;
     }
 
-    fetch('/save', {
+    fetch('/handle', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ studentName: name })
+        body: JSON.stringify({ name: name })
     })
     .then(response => response.json())
     .then(data => {
@@ -119,17 +119,17 @@ function submitStudentName() {
         }
     })
     .catch(error => {
-        nameError.textContent = '保存失败，请重试';
+        nameError.textContent = '登录失败，请重试';
     });
 }
 
 function loadTeachers() {
-    fetch('/api/teachers')
+    fetch('/get_teachers')
     .then(response => response.json())
     .then(data => {
         const select = document.getElementById('teacher-select');
         select.innerHTML = '<option value="">请选择老师</option>';
-        data.teachers.forEach(teacher => {
+        data.forEach(teacher => {
             const option = document.createElement('option');
             option.value = teacher.id;
             option.textContent = teacher.name;
@@ -152,12 +152,12 @@ function submitTeacherSelect() {
         return;
     }
 
-    fetch('/save', {
+    fetch('/handle', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ teacherId: parseInt(teacherId) })
+        body: JSON.stringify({ name: teacherId })
     })
     .then(response => response.json())
     .then(data => {
