@@ -9,21 +9,11 @@
 <body>
     <a href="/logout" class="logout-btn" onclick="localStorage.clear(); sessionStorage.clear();">登出</a>
     <div id="app">
-        <div id="name-screen" class="screen active">
-            <div class="container">
-                <h2>请输入孩子姓名</h2>
-                <div class="name-input-wrapper">
-                    <input type="text" id="student-name-input" placeholder="请输入孩子姓名" autocomplete="off">
-                    <button id="name-submit-btn">确认</button>
-                </div>
-            </div>
-        </div>
-
         <div id="notice-modal" class="modal">
             <div class="modal-content">
                 <h3>预约须知</h3>
                 <div class="notice-content">
-                    <p>1. 每位家长最多可预约3位老师</p>
+                    <p>1. 每位家长最多可预约2位老师</p>
                     <p>2. 请根据前方等待人数合理安排时间</p>
                     <p>3. 预约成功后请按时前往指定位置</p>
                     <p>4. 如需取消预约，请联系管理员</p>
@@ -35,7 +25,7 @@
             </div>
         </div>
 
-        <div id="teacher-screen" class="screen">
+        <div id="teacher-screen" class="screen active">
             <div class="container">
                 <div class="header-info">
                     <h2>选择预约老师</h2>

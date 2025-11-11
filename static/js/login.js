@@ -1,3 +1,5 @@
+let currentRole = '';
+
 document.getElementById('key-input').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         checkKey();
@@ -28,10 +30,14 @@ function checkKey() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            currentRole = data.role;
+            keyInput.disabled = true;
+            document.getElementById('key-submit-btn').disabled = true;
+            
             if (data.role === 'parent') {
-                window.location.href = '/parent';
+                showParentForm();
             } else if (data.role === 'teacher') {
-                window.location.href = '/teacher';
+                showTeacherForm();
             }
         } else {
             keyError.textContent = data.message || '密钥错误，请重新输入';
@@ -41,5 +47,127 @@ function checkKey() {
     .catch(error => {
         keyError.textContent = '验证失败，请重试';
         keyInput.value = '';
+    });
+}
+
+function showParentForm() {
+    const container = document.getElementById('additional-form-container');
+    container.innerHTML = `
+        <div class="name-input-wrapper">
+            <input type="text" id="student-name-input" placeholder="请输入孩子姓名" autocomplete="off">
+            <button id="student-name-submit-btn">确认</button>
+        </div>
+        <p id="student-name-error" class="error-message"></p>
+    `;
+    
+    const nameInput = document.getElementById('student-name-input');
+    const submitBtn = document.getElementById('student-name-submit-btn');
+    
+    nameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            submitStudentName();
+        }
+    });
+    
+    submitBtn.addEventListener('click', submitStudentName);
+    nameInput.focus();
+}
+
+function showTeacherForm() {
+    const container = document.getElementById('additional-form-container');
+    container.innerHTML = `
+        <div class="teacher-select-wrapper">
+            <label for="teacher-select">选择老师:</label>
+            <select id="teacher-select" class="teacher-select">
+                <option value="">请选择老师</option>
+            </select>
+        </div>
+        <p id="teacher-select-error" class="error-message"></p>
+    `;
+    
+    loadTeachers();
+    
+    const select = document.getElementById('teacher-select');
+    select.addEventListener('change', submitTeacherSelect);
+}
+
+function submitStudentName() {
+    const nameInput = document.getElementById('student-name-input');
+    const nameError = document.getElementById('student-name-error');
+    const name = nameInput.value.trim();
+
+    nameError.textContent = '';
+
+    if (!name) {
+        nameError.textContent = '请输入孩子姓名';
+        return;
+    }
+
+    fetch('/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ studentName: name })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/parent';
+        } else {
+            nameError.textContent = data.message || '保存失败，请重试';
+        }
+    })
+    .catch(error => {
+        nameError.textContent = '保存失败，请重试';
+    });
+}
+
+function loadTeachers() {
+    fetch('/api/teachers')
+    .then(response => response.json())
+    .then(data => {
+        const select = document.getElementById('teacher-select');
+        select.innerHTML = '<option value="">请选择老师</option>';
+        data.teachers.forEach(teacher => {
+            const option = document.createElement('option');
+            option.value = teacher.id;
+            option.textContent = teacher.name;
+            select.appendChild(option);
+        });
+    })
+    .catch(error => {
+        console.error('Failed to load teachers:', error);
+    });
+}
+
+function submitTeacherSelect() {
+    const select = document.getElementById('teacher-select');
+    const teacherError = document.getElementById('teacher-select-error');
+    const teacherId = select.value;
+
+    teacherError.textContent = '';
+
+    if (!teacherId) {
+        return;
+    }
+
+    fetch('/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teacherId: parseInt(teacherId) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/teacher';
+        } else {
+            teacherError.textContent = data.message || '保存失败，请重试';
+        }
+    })
+    .catch(error => {
+        teacherError.textContent = '保存失败，请重试';
     });
 }
