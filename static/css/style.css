@@ -62,7 +62,13 @@ h1 {
     text-align: center;
     margin-bottom: 40px;
 }
+.small_title {
 
+    color: #1890ff;
+    text-align: center;
+    margin-bottom: 40px;
+
+}
 h2 {
     font-size: 24px;
     color: #1890ff;
