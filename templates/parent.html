@@ -10,7 +10,7 @@
     
     <a href="/logout" class="logout-btn" onclick="localStorage.clear(); sessionStorage.clear();">登出</a>
     <div id="app">
-        <h1>欢迎，xxx</h1>
+        <h1>欢迎，{{ t_name }}</h1>
 
         <div id="teacher-screen" class="screen active">
             <div class="container">
@@ -24,6 +24,7 @@
                 
             </div>
         </div>
+        <a href="/appointment">新建预约</a>
     </div>
     
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
