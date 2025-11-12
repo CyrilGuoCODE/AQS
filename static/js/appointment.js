@@ -1,3 +1,10 @@
+const normalizedTeachers = (typeof teachers !== 'undefined' && Array.isArray(teachers) ? teachers : []).map((teacher, index) => {
+    const fallbackId = `teacher-${index + 1}`;
+    const id = teacher.id ?? teacher._id ?? fallbackId;
+    const waiting = Number.isFinite(Number(teacher.waiting)) ? Number(teacher.waiting) : 0;
+    return { ...teacher, id, waiting };
+});
+
 let selectedTeachers = [];
 let studentName = '';
 let countdownTimer = null;
@@ -51,7 +58,7 @@ function renderTeachers() {
     const grid = document.getElementById('teacher-grid');
     grid.innerHTML = '';
 
-    teachers.forEach(teacher => {
+    normalizedTeachers.forEach(teacher => {
         const card = document.createElement('div');
         card.className = 'teacher-card';
         if (selectedTeachers.find(t => t.id === teacher.id)) {
@@ -108,8 +115,11 @@ function submitAppointment() {
     scheduleList.innerHTML = '';
 
     selectedTeachers.forEach((teacher, index) => {
-        const totalWaiting = selectedTeachers.slice(0, index).reduce((sum, t) => sum + t.waiting, 0);
-        const estimatedMinutes = (totalWaiting + teacher.waiting) * 10 + (index + 1) * 10;
+        const totalWaiting = selectedTeachers
+            .slice(0, index)
+            .reduce((sum, t) => sum + (Number.isFinite(Number(t.waiting)) ? Number(t.waiting) : 0), 0);
+        const waitingCount = Number.isFinite(Number(teacher.waiting)) ? Number(teacher.waiting) : 0;
+        const estimatedMinutes = (totalWaiting + waitingCount) * 10 + (index + 1) * 10;
         const estimatedTime = formatTime(estimatedMinutes);
 
         const scheduleItem = document.createElement('div');
