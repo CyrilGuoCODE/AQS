@@ -136,7 +136,9 @@ def appointment():
 def teacher():
     if not session.get('teacher_verified'):
         return redirect('/login')
-    return render_template('teacher.html')
+    # data = db['queue'].find_one({'name': session['name']})
+    data = []
+    return render_template('teacher.html', t_teacher=teachers, t_name=session['name'], t_queue=data)
 
 
 # ==================== 错误处理 ====================

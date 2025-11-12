@@ -12,15 +12,8 @@
         <div id="teacher-dashboard-screen" class="screen active">
             <div class="container">
                 <h2>老师管理面板</h2>
-                
-                <div class="teacher-select-wrappser">
-                    <label for="teacher-select">选择老师:</label>
-                    <select id="teacher-select" class="teacher-select">
-                        <option value="">请选择老师</option>
-                    </select>
-                </div>
 
-                <div id="queue-display" class="queue-display" style="display: none;">
+                <div id="queue-display" class="queue-display">
                     <div class="current-parent-section">
                         <h3>当前谈话家长</h3>
                         <div id="current-parent" class="current-parent-card">
@@ -44,6 +37,11 @@
             </div>
         </div>
     </div>
+    <script>
+        const teachers = {{ t_teacher | tojson | safe }}
+        const queue = {{ t_queue | tojson | safe }}
+        const parentName = '{{ t_name }}'
+    </script>
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/teacher.js') }}"></script>
 </body>
