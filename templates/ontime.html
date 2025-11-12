@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家长会预约系统 - 老师端</title>
+    <title>家长会预约系统 - 实时等待队列</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -43,6 +43,6 @@
         const parentName = '{{ t_name }}'
     </script>
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/online.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ontime.js') }}"></script>
 </body>
 </html>
