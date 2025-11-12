@@ -1,87 +1,121 @@
 [
-    {
-        "name": "英语刘老师",
-        "class": "初二四班,初二五班",
-        "location": "初二四班"
+    {   
+        "id":1,
+        "name": "刘老师",
+        "class": ["初二四班","初二五班"],
+        "location": "初二四班",
+        "subject": "英语"
     },
     {
-        "name": "语文刘老师",
-        "class": "初二四班,初二三班",
-        "location": "初二三班"
+        "id":2,
+        "name": "刘老师",
+        "class": ["初二四班","初二三班"],
+        "location": "初二三班",
+        "subject": "语文"
     },
     {
-        "name": "数学孙老师",
-        "class": "初二四班,初二三班",
-        "location": "初二三班"
+        "id":3,
+        "name": "孙老师",
+        "class": ["初二四班","初二三班"],
+        "location": "初二三班",
+        "subject": "数学"
     },
     {
-        "name": "语文贺老师",
-        "class": "初二一班,初二六班",
-        "location": "初二一班"
+        "id":4,
+        "name": "贺老师",
+        "class": ["初二一班","初二六班"],
+        "location": "初二一班",
+        "subject":"语文"
     },
     {
-        "name": "数学丁老师",
-        "class": "初二一班,初二二班",
-        "location": "初二二班"
+        "id":5,
+        "name": "丁老师",
+        "class": ["初二一班","初二二班"],
+        "location": "初二二班",
+        "subject": "数学"
     },
     {
-        "name": "英语郭老师",
-        "class": "初二一班,初二六班",
-        "location": "初二一班"
+        "id":6,
+        "name": "郭老师",
+        "class": ["初二一班","初二六班"],
+        "location": "初二一班",
+        "subject": "英语"
     },
     {
-        "name": "语文苏老师",
-        "class": "初二一班,初二五班",
-        "location": "初二五班"
+        "id":7,
+        "name": "苏老师",
+        "class": ["初二一班","初二五班"],
+        "location": "初二五班",
+        "subject":"语文"
     },
     {
-        "name": "数学李老师",
-        "class": "初二五班",
-        "location": "初二五班"
+        "id":8,
+        "name": "李老师",
+        "class": ["初二五班"],
+        "location": "初二五班",
+        "subject":"数学"
     },
     {
-        "name": "数学宋老师",
-        "class": "初二六班",
-        "location": "初二六班"
+        "id":9,
+        "name": "宋老师",
+        "class": ["初二六班"],
+        "location": "初二六班",
+        "subject":"数学"
     },
     {
-        "name": "英语郭老师",
-        "class": "初二一班,初二六班",
-        "location": "初二一班"
+        "id":10,
+        "name": "郭老师",
+        "class": ["初二一班","初二六班"],
+        "location": "初二一班",
+        "subject":"英语"
     },
     {
-        "name": "英语王老师",
-        "class": "初二二班",
-        "location": "初二二班,初二三班"
+        "id":11,
+        "name": "王老师",
+        "class": ["初二二班"],
+        "location": "初二二班,初二三班",
+        "subject":"英语"
     },
     {
-        "name": "物理梁老师",
-        "class": "初二一班,初二三班,初二五班",
-        "location": "待定"
+        "id":12,
+        "name": "梁老师",
+        "class": ["初二一班","初二三班","初二五班"],
+        "location": "待定",
+        "subject":"物理"
     },
     {
-        "name": "物理柳老师",
-        "class": "初二二班,初二四班,初二刘班",
-        "location": "初二四班"
+        "id":13,
+        "name": "柳老师",
+        "class": ["初二二班","初二四班","初二刘班"],
+        "location": "初二四班",
+        "subject":"物理"
     },
     {
+        "id":14,
         "name": "生物陈老师",
-        "class": "全年级",
-        "location": "初二办公室"
+        "class": ["全年级"],
+        "location": "初二办公室",
+        "subject":"生物"
     },
     {
+        "id":15,
         "name": "道法王老师",
-        "class": "全年级",
-        "location": "初二办公室"
+        "class": ["全年级"],
+        "location": "初二办公室",
+        "subject":"道法"
     },
     {
+        "id":16,
         "name": "班主任谭老师",
-        "class": "初二一班",
-        "location": "初二一班"
+        "class": ["初二一班"],
+        "location": "初二一班",
+        "subject":"班主任"
     },
     {
+        "id":17,
         "name": "班主任杨老师",
-        "class": "初二六班",
-        "location": "初二六班"
+        "class": ["初二六班"],
+        "location": "初二六班",
+        "subject":"班主任"
     }
 ]
