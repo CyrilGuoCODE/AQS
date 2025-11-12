@@ -236,6 +236,10 @@ button:disabled {
     font-weight: 500;
 }
 
+label {
+    width: 100%;
+}
+
 .teacher-select {
     width: 100%;
     padding: 12px 16px;

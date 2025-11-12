@@ -54,6 +54,7 @@ function showParentForm() {
     const container = document.getElementById('additional-form-container');
     container.innerHTML = `
         <div class="name-input-wrapper">
+            <label for="student-name-input">请输入孩子姓名:</label>
             <input type="text" id="student-name-input" placeholder="请输入孩子姓名" autocomplete="off">
             <button id="student-name-submit-btn">确认</button>
         </div>
@@ -77,7 +78,7 @@ function showTeacherForm() {
     const container = document.getElementById('additional-form-container');
     container.innerHTML = `
         <div class="teacher-select-wrapper">
-            <label for="teacher-select">选择老师:</label>
+            <label for="teacher-select">请选择老师:</label>
             <select id="teacher-select" class="teacher-select">
                 <option value="">请选择老师</option>
             </select>
