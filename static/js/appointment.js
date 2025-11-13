@@ -58,6 +58,8 @@ function renderTeachers() {
     grid.innerHTML = '';
 
     normalizedTeachers.forEach(teacher => {
+        if (teacher.class.indexOf(className) === -1) return;
+
         const card = document.createElement('div');
         card.className = 'teacher-card';
         if (selectedTeachers.find(t => t.id === teacher.id)) {
@@ -70,7 +72,13 @@ function renderTeachers() {
                 <span><strong>班级:</strong> ${teacher.class}</span>
             </div>
             <div class="teacher-info">
+                <span><strong>位置:</strong> <span class="waiting-count">${teacher.location}</span></span>
+            </div>
+            <div class="teacher-info">
                 <span><strong>前方等待:</strong> <span class="waiting-count">${teacher.waiting}人</span></span>
+            </div>
+            <div class="teacher-info">
+                <span><strong>预计时间:</strong> <span class="waiting-count">???</span></span>
             </div>
         `;
 

@@ -50,14 +50,6 @@ with open('notice.txt', 'r', encoding='utf-8') as file:
 
 
 # ==================== Flask路由 ====================
-@app.before_request
-def before_request():
-    pass
-
-
-@app.after_request
-def after_request(response):
-    return response
 
 
 @app.route('/favicon.ico')
@@ -100,6 +92,7 @@ def get_teachers():
 def handle():
     if session['role'] == 'parent' and 'parent_verified' in session:
         session['name'] = request.json['name']
+        session['className'] = request.json['className']
         limiter.reset()
         return jsonify({'success': True})
     elif session['role'] == 'teacher' and 'teacher_verified' in session:
@@ -129,7 +122,7 @@ def parent():
 def appointment():
     if not session.get('parent_verified'):
         return redirect('/login')
-    return render_template('appointment.html', t_name=session['name'], t_teacher=teachers, t_notice=notice)
+    return render_template('appointment.html', t_name=session['name'], t_className=session['className'], t_teacher=teachers, t_notice=notice)
 
 
 @app.route('/parent/appointment/save', methods=['POST'])
