@@ -6,6 +6,7 @@ import pymongo
 import time
 import secrets
 import json
+import os
 
 
 # ==================== 初始化配置 ====================
@@ -34,6 +35,8 @@ limiter = Limiter(
     key_func=get_real_ip,
     storage_uri=mongodb_uri
 )
+
+os.makedirs('log', exist_ok=True)
 
 # 初始化SocketIO
 socketio = SocketIO(app, ping_interval=5, ping_timeout=20)
@@ -93,6 +96,7 @@ def handle():
     if session['role'] == 'parent' and 'parent_verified' in session:
         session['name'] = request.json['name']
         session['className'] = request.json['className']
+        session['id'] = session['className'] + session['name']
         limiter.reset()
         return jsonify({'success': True})
     elif session['role'] == 'teacher' and 'teacher_verified' in session:
@@ -129,7 +133,11 @@ def appointment():
 def save():
     if not session.get('parent_verified'):
         return redirect('/login')
-    # db['parent'].insert_one({'name': session['name'], 'appointment': request.json['appointment']})
+    data = db.parent.find_one({'name': session['id']})
+    if data == None:
+        db.parent.insert_one({'name': session['id'], 'appointment': request.json['appointments']})
+    else:
+        db.parent.update_one({'name': session['id']}, {'$set': {'appointment': request.json['appointments']}})
     return jsonify({'success': True})
 
 
