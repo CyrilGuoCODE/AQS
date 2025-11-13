@@ -6,7 +6,6 @@ const normalizedTeachers = (typeof teachers !== 'undefined' && Array.isArray(tea
 });
 
 let selectedTeachers = [];
-let studentName = '';
 let countdownTimer = null;
 
 function showScreen(screenId) {
@@ -137,8 +136,7 @@ function submitAppointment() {
         scheduleList.appendChild(scheduleItem);
     });
 
-    document.getElementById('parent-name-display').textContent = parentName;
-    document.getElementById('student-name-display').textContent = studentName;
+    document.getElementById('parent-name-display').textContent = name;
     showScreen('schedule-screen');
 }
 
