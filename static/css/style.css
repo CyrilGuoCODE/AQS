@@ -30,6 +30,28 @@ body {
     background-color: #ff7875;
 }
 
+.back-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #ffffff;
+    color: #1890ff;
+    text-decoration: none;
+    border-radius: 4px;
+    border: 1px solid #1890ff;
+    transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+    z-index: 1001;
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.back-btn:hover {
+    background-color: #1890ff;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.25);
+}
+
 #app {
     min-height: 100vh;
     display: flex;
@@ -578,6 +600,13 @@ label {
         font-size: 14px;
     }
 
+    .back-btn {
+        top: 10px;
+        left: 10px;
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
     #app {
         padding: 10px;
     }
@@ -781,6 +810,13 @@ label {
         font-size: 12px;
     }
 
+    .back-btn {
+        top: 5px;
+        left: 5px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
     #app {
         padding: 5px;
     }
@@ -827,4 +863,4 @@ label {
     .teacher-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-}
+}}
