@@ -244,7 +244,7 @@ button:disabled {
     box-shadow: 0 1px 4px rgba(9, 109, 217, 0.4);
 }
 
-.-primabuttonry[disabled],
+.button-primary[disabled],
 .button-primary.disabled {
     background-color: #d9d9d9;
     color: #ffffff;
