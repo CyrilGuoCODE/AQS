@@ -54,6 +54,23 @@ function showParentForm() {
     const container = document.getElementById('additional-form-container');
     container.innerHTML = `
         <div class="name-input-wrapper">
+            <label for="grade-select">请选择年级:</label>
+            <select id="grade-select" class="teacher-select">
+                <option value="">请选择年级</option>
+                <option value="1">初一</option>
+                <option value="2">初二</option>
+                <option value="3">初三</option>
+            </select>
+            <label for="class-select">请选择班级:</label>
+            <select id="class-select" class="teacher-select">
+                <option value="">请选择班级</option>
+                <option value="21">初二一班</option>
+                <option value="22">初二二班</option>
+                <option value="23">初二三班</option>
+                <option value="24">初二四班</option>
+                <option value="25">初二五班</option>
+                <option value="26">初二六班</option>
+            </select>
             <label for="student-name-input">请输入孩子姓名:</label>
             <input type="text" id="student-name-input" placeholder="请输入孩子姓名" autocomplete="off">
             <button id="student-name-submit-btn">确认</button>
