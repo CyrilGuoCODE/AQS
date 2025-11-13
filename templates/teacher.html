@@ -3,47 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家长会预约系统 - 老师端</title>
+    <title>家长会预约系统 - 教师主页</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+
     <a href="/logout" class="logout-btn">登出</a>
     <div id="app">
-        <div id="teacher-dashboard-screen" class="screen active">
-            <div class="container">
-                <h2>老师管理面板</h2>
-                
-                <div class="teacher-select-wrapper">
-                    <label for="teacher-select">选择老师:</label>
-                    <select id="teacher-select" class="teacher-select">
-                        <option value="">请选择老师</option>
-                    </select>
-                </div>
-
-                <div id="queue-display" class="queue-display" style="display: none;">
-                    <div class="current-parent-section">
-                        <h3>当前谈话家长</h3>
-                        <div id="current-parent" class="current-parent-card">
-                        </div>
-                        <div class="action-buttons">
-                            <button id="skip-btn" class="skip-btn">跳过</button>
-                            <button id="complete-btn" class="complete-btn">标记已完成</button>
-                        </div>
-                    </div>
-
-                    <div class="waiting-queue-section">
-                        <h3>等待队列（后3位）</h3>
-                        <div id="waiting-queue" class="waiting-queue">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="empty-queue" class="empty-queue" style="display: none;">
-                    <p class="info-text">当前没有等待的家长</p>
-                </div>
-            </div>
-        </div>
+        <h1>欢迎，{{ t_name }}</h1>
+        <a href="/teacher/ontime">查看实时等待队列</a>
+        <a href="/teacher/list">查看所有预约家长</a>
+        <a href="/teacher/setting">设置</a>
     </div>
+
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/teacher.js') }}"></script>
 </body>

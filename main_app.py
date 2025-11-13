@@ -125,18 +125,49 @@ def parent():
     return render_template('parent.html', t_name=session['name'], t_data=data)
 
 
-@app.route('/appointment')
+@app.route('/parent/appointment')
 def appointment():
     if not session.get('parent_verified'):
         return redirect('/login')
     return render_template('appointment.html', t_name=session['name'], t_teacher=teachers, t_notice=notice)
 
 
+@app.route('/parent/appointment/save', methods=['POST'])
+def save():
+    if not session.get('parent_verified'):
+        return redirect('/login')
+    # db['parent'].insert_one({'name': session['name'], 'appointment': request.json['appointment']})
+    return jsonify({'success': True})
+
+
 @app.route('/teacher')
 def teacher():
     if not session.get('teacher_verified'):
         return redirect('/login')
-    return render_template('teacher.html')
+    return render_template('teacher.html', t_name=teachers[int(session['name'])-1]['name'])
+
+
+@app.route('/teacher/ontime')
+def ontime():
+    if not session.get('teacher_verified'):
+        return redirect('/login')
+    # data = db['queue'].find_one({'name': session['name']})
+    data = []
+    return render_template('ontime.html', t_teacher=teachers, t_name=teachers[int(session['name'])-1]['name'], t_queue=data)
+
+
+@app.route('/teacher/list')
+def list():
+    if not session.get('teacher_verified'):
+        return redirect('/login')
+    return render_template('list.html')
+
+
+@app.route('/teacher/setting')
+def setting():
+    if not session.get('teacher_verified'):
+        return redirect('/login')
+    return render_template('setting.html')
 
 
 # ==================== 错误处理 ====================

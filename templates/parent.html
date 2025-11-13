@@ -8,7 +8,7 @@
 </head>
 <body>
     
-    <a href="/logout" class="logout-btn" onclick="localStorage.clear(); sessionStorage.clear();">登出</a>
+    <a href="/logout" class="logout-btn">登出</a>
     <div id="app" class="layout-stretch">
         <div id="appointment-screen" class="screen parent-screen {% if not t_data %}active{% endif %}">
             <div class="container parent-container parent-container-empty">
@@ -46,6 +46,7 @@
                 </div>
             </div>
         </div>
+        <a href="/parent/appointment">新建预约</a>
     </div>
     
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>

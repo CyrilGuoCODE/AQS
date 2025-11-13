@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家长会预约系统 - 实时等待队列</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <a href="/logout" class="logout-btn">登出</a>
+    <div id="app">
+        <div id="teacher-dashboard-screen" class="screen active">
+            <div class="container">
+                <h2>老师管理面板</h2>
+
+                <div id="queue-display" class="queue-display">
+                    <div class="current-parent-section">
+                        <h3>当前谈话家长</h3>
+                        <div id="current-parent" class="current-parent-card">
+                        </div>
+                        <div class="action-buttons">
+                            <button id="skip-btn" class="skip-btn">跳过</button>
+                            <button id="complete-btn" class="complete-btn">标记已完成</button>
+                        </div>
+                    </div>
+
+                    <div class="waiting-queue-section">
+                        <h3>等待队列（后3位）</h3>
+                        <div id="waiting-queue" class="waiting-queue">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="empty-queue" class="empty-queue" style="display: none;">
+                    <p class="info-text">当前没有等待的家长</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const teachers = {{ t_teacher | tojson | safe }}
+        const queue = {{ t_queue | tojson | safe }}
+        const parentName = '{{ t_name }}'
+    </script>
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ontime.js') }}"></script>
+</body>
+</html>
