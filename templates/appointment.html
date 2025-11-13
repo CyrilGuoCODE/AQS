@@ -48,6 +48,7 @@
     <script>
         const teachers = {{ t_teacher | tojson | safe }}
         const name = '{{ t_name }}'
+        const className = '{{ t_className }}'
     </script>
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/appointment.js') }}"></script>
