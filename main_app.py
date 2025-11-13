@@ -50,14 +50,6 @@ with open('notice.txt', 'r', encoding='utf-8') as file:
 
 
 # ==================== Flask路由 ====================
-@app.before_request
-def before_request():
-    pass
-
-
-@app.after_request
-def after_request(response):
-    return response
 
 
 @app.route('/favicon.ico')
