@@ -133,7 +133,7 @@ function loadTeachers() {
         data.forEach(teacher => {
             const option = document.createElement('option');
             option.value = teacher.id;
-            option.textContent = teacher.name;
+            option.textContent = teacher.subject + teacher.name;
             select.appendChild(option);
         });
     })

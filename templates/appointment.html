@@ -39,8 +39,7 @@
             <div class="container">
                 <h2>预约成功</h2>
                 <div class="schedule-info">
-                    <p class="info-item"><strong>家长姓名:</strong> <span id="parent-name-display"></span></p>
-                    <p class="info-item"><strong>孩子姓名:</strong> <span id="student-name-display"></span></p>
+                    <p class="info-item"><strong>预约家长:</strong> <span id="parent-name-display"></span></p>
                 </div>
                 <div id="schedule-list" class="schedule-list"></div>
             </div>
@@ -48,7 +47,7 @@
     </div>
     <script>
         const teachers = {{ t_teacher | tojson | safe }}
-        const parentName = '{{ t_name }}'
+        const name = '{{ t_name }}'
     </script>
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/appointment.js') }}"></script>
