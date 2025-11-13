@@ -69,7 +69,7 @@ function renderTeachers() {
         card.innerHTML = `
             <div class="teacher-name">${teacher.subject}${teacher.name}</div>
             <div class="teacher-info">
-                <span><strong>位置:</strong> <span class="waiting-count">${teacher.location}</span></span>
+                <span><strong>地点:</strong> <span class="waiting-count">${teacher.location}</span></span>
             </div>
             <div class="teacher-info">
                 <span><strong>前方等待:</strong> <span class="waiting-count">${teacher.waiting}人</span></span>

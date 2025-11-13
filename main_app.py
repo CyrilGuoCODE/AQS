@@ -100,7 +100,8 @@ def handle():
         limiter.reset()
         return jsonify({'success': True})
     elif session['role'] == 'teacher' and 'teacher_verified' in session:
-        session['name'] = request.json['name']
+        session['id'] = request.json['name']
+        session['name'] = teachers[int(session['id'])-1]['name']
         limiter.reset()
         return jsonify({'success': True})
     else:
@@ -117,8 +118,14 @@ def logout():
 def parent():
     if not session.get('parent_verified'):
         return redirect('/login')
-    # data = db['parent'].find_one({'name': session['name']})
-    data = []
+    data = db.parent.find_one({'name': session['id']})
+    if data == None:
+        data = []
+    else:
+        l = []
+        for i in data['appointment']:
+            l.append(teachers[int(i)-1])
+        data = l
     return render_template('parent.html', t_name=session['name'], t_data=data)
 
 
@@ -145,16 +152,16 @@ def save():
 def teacher():
     if not session.get('teacher_verified'):
         return redirect('/login')
-    return render_template('teacher.html', t_name=teachers[int(session['name'])-1]['name'])
+    return render_template('teacher.html', t_name=session['name'])
 
 
 @app.route('/teacher/ontime')
 def ontime():
     if not session.get('teacher_verified'):
         return redirect('/login')
-    # data = db['queue'].find_one({'name': session['name']})
+    # data = db.queue.find_one({'id': session['id']})
     data = []
-    return render_template('ontime.html', t_teacher=teachers, t_name=teachers[int(session['name'])-1]['name'], t_queue=data)
+    return render_template('ontime.html', t_teacher=teachers, t_name=session['name'], t_queue=data)
 
 
 @app.route('/teacher/list')
