@@ -214,6 +214,45 @@ button:disabled {
     max-width: 100%;
 }
 
+.button-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 160px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 500;
+    background-color: #1890ff;
+    color: #ffffff;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+    text-decoration: none;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+    cursor: pointer;
+}
+
+.button-primary:hover {
+    background-color: #40a9ff;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.button-primary:active {
+    background-color: #096dd9;
+    box-shadow: 0 1px 4px rgba(9, 109, 217, 0.4);
+}
+
+.button-primary[disabled],
+.button-primary.disabled {
+    background-color: #d9d9d9;
+    color: #ffffff;
+    box-shadow: none;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .info-text {
     text-align: center;
     color: #666;
@@ -443,6 +482,39 @@ button:disabled {
     font-weight: bold;
 }
 
+.layout-stretch {
+    width: 100%;
+}
+
+.parent-screen .parent-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-height: 60vh;
+}
+
+.parent-container-empty {
+    justify-content: flex-start;
+}
+
+.parent-action-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    background: linear-gradient(145deg, #f0f5ff, #ffffff);
+    border-radius: 16px;
+    padding: 48px 24px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 8px 24px rgba(24, 144, 255, 0.15);
+}
+
+.parent-action-card .info-text {
+    margin: 0;
+    max-width: 520px;
+}
+
 .modal {
     display: none;
     position: fixed;
@@ -664,6 +736,17 @@ button:disabled {
         font-size: 13px;
     }
 
+    .parent-screen .parent-container {
+        gap: 20px;
+        min-height: 50vh;
+    }
+
+    .parent-action-card {
+        padding: 32px 18px;
+        border-radius: 12px;
+        gap: 18px;
+    }
+
     .modal-content {
         padding: 20px 15px;
         width: 95%;
@@ -728,6 +811,11 @@ button:disabled {
     .modal-content {
         padding: 15px 12px;
         width: 98%;
+    }
+
+    .parent-action-card {
+        padding: 28px 16px;
+        gap: 16px;
     }
 }
 

@@ -9,19 +9,41 @@
 <body>
     
     <a href="/logout" class="logout-btn" onclick="localStorage.clear(); sessionStorage.clear();">登出</a>
-    <div id="app">
-        <h1>欢迎，xxx</h1>
-
-        <div id="teacher-screen" class="screen active">
-            <div class="container">
-                
-               
+    <div id="app" class="layout-stretch">
+        <div id="appointment-screen" class="screen parent-screen {% if not t_data %}active{% endif %}">
+            <div class="container parent-container parent-container-empty">
+                <div class="header-info">
+                    <h2>欢迎，{{ t_name }}家长</h2>
+                </div>
+                <div class="parent-action-card">
+                    <p class="info-text">请点击下方按钮预约老师，我们将为您展示已预约信息。</p>
+                    <a href="/appointment" class="submit-btn button-primary">前往预约</a>
+                </div>
             </div>
         </div>
 
-        <div id="schedule-screen" class="screen">
-            <div class="container">
-                
+        <div id="schedule-screen" class="screen parent-screen {% if t_data %}active{% endif %}">
+            <div class="container parent-container">
+                <div class="header-info">
+                    <h2>预约记录</h2>
+                    <p class="selected-count">欢迎，{{ t_name }}家长</p>
+                </div>
+                <div class="schedule-list">
+                    {% for appointment in t_data %}
+                    <div class="schedule-item">
+                        <div class="schedule-item-header">
+                            <span class="schedule-teacher-name">{{ appointment.teacher_name or appointment.teacher or '老师' }}</span>
+                            <span class="schedule-time">预约时间: {{ appointment.time or appointment.schedule_time or '待定' }}</span>
+                        </div>
+                        <div class="schedule-details">
+                            <p>班级: {{ appointment.class_name or appointment.class or '待定' }}</p>
+                            <p class="schedule-location">地点: {{ appointment.location or '待定' }}</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="info-text">当前暂无预约记录</p>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
