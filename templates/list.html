@@ -9,7 +9,52 @@
 <body>
     <a href="/teacher" class="back-btn">返回</a>
     <a href="/logout" class="logout-btn">登出</a>
-    <h1> 名单列表</h1>
+
+    <div id="app">
+        <div class="container">
+            <div class="header-info">
+                <h2>名单列表</h2>
+                <a href="/teacher/list/download" class="button-primary download-btn" target="_blank">下载为Excel</a>
+            </div>
+
+            <div class="list-container">
+                {% if t_list and t_list|length > 0 %}
+                <div class="list-table-wrapper">
+                    <table class="list-table">
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>学生姓名</th>
+                                <th>班级</th>
+                                <th>预约时间</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in t_list %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item.studentName or item.student_name or '-' }}</td>
+                                <td>{{ item.className or item.class_name or '-' }}</td>
+                                <td>{{ item.appointmentTime or item.appointment_time or '-' }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ item.status or 'waiting' }}">
+                                        {{ item.statusText or item.status_text or '等待中' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-list">
+                    <p class="empty-hint">当前暂无预约名单</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
    
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/list.js') }}"></script>

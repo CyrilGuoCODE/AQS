@@ -977,6 +977,117 @@ label {
     text-align: center;
 }
 
+.list-container {
+    margin-top: 30px;
+}
+
+.list-table-wrapper {
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.list-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    font-size: 14px;
+}
+
+.list-table thead {
+    background-color: #1890ff;
+    color: #ffffff;
+}
+
+.list-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 15px;
+    white-space: nowrap;
+}
+
+.list-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.3s;
+}
+
+.list-table tbody tr:hover {
+    background-color: #f5f7fa;
+}
+
+.list-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.list-table td {
+    padding: 16px;
+    color: #333;
+    white-space: nowrap;
+}
+
+.list-table td:first-child {
+    text-align: center;
+    color: #666;
+    font-weight: 500;
+}
+
+.empty-list {
+    text-align: center;
+    padding: 60px 20px;
+    background-color: #f5f7fa;
+    border-radius: 8px;
+}
+
+.empty-list .empty-hint {
+    font-size: 16px;
+    color: #999;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.status-badge.status-waiting {
+    background-color: #fff7e6;
+    color: #faad14;
+    border: 1px solid #ffd591;
+}
+
+.status-badge.status-current {
+    background-color: #e6f7ff;
+    color: #1890ff;
+    border: 1px solid #91d5ff;
+}
+
+.status-badge.status-completed {
+    background-color: #f6ffed;
+    color: #52c41a;
+    border: 1px solid #b7eb8f;
+}
+
+.status-badge.status-skipped {
+    background-color: #fff1f0;
+    color: #ff4d4f;
+    border: 1px solid #ffccc7;
+}
+
+.download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.download-btn::before {
+    font-size: 18px;
+}
+
 @media (max-width: 768px) {
     .setting-section {
         padding: 20px 15px;
@@ -997,5 +1108,55 @@ label {
     .remove-btn {
         padding: 6px 12px;
         font-size: 13px;
+    }
+
+    .list-table-wrapper {
+        border-radius: 6px;
+    }
+
+    .list-table {
+        font-size: 13px;
+    }
+
+    .list-table th,
+    .list-table td {
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+
+    .list-table th {
+        font-size: 14px;
+    }
+
+    .header-info {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+
+    .download-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .empty-list {
+        padding: 40px 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .list-table {
+        font-size: 12px;
+    }
+
+    .list-table th,
+    .list-table td {
+        padding: 10px 6px;
+        font-size: 12px;
+    }
+
+    .status-badge {
+        padding: 3px 8px;
+        font-size: 12px;
     }
 }
