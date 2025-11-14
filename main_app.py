@@ -43,7 +43,7 @@ socketio = SocketIO(app, ping_interval=5, ping_timeout=20)
 
 # 数据库连接
 client = pymongo.MongoClient(mongodb_uri)
-db = client['main']
+db = client['aqs']
 
 with open('teacher.json', 'r', encoding='utf-8') as f:
     teachers = json.load(f)
@@ -144,7 +144,8 @@ def save():
     if data == None:
         db.parent.insert_one({'name': session['id'], 'appointment': request.json['appointments']})
     else:
-        db.parent.update_one({'name': session['id']}, {'$set': {'appointment': request.json['appointments']}})
+        data['appointment'] = request.json['appointments']
+        db.parent.update_one({'name': session['id']}, {'$set': data})
     return jsonify({'success': True})
 
 
@@ -159,23 +160,48 @@ def teacher():
 def ontime():
     if not session.get('teacher_verified'):
         return redirect('/login')
-    # data = db.queue.find_one({'id': session['id']})
-    data = []
-    return render_template('ontime.html', t_teacher=teachers, t_name=session['name'], t_queue=data)
+    data = db.teacher.find_one({'id': session['id']})
+    if data == None:
+        data = []
+    else:
+        data = data['queue']
+    return render_template('ontime.html', t_queue=data)
 
 
 @app.route('/teacher/list')
 def list():
     if not session.get('teacher_verified'):
         return redirect('/login')
-    return render_template('list.html')
+    data = db.teacher.find_one({'id': session['id']})
+    if data == None:
+        data = []
+    else:
+        data = data['queue']
+    return render_template('list.html', t_queue=data)
 
 
 @app.route('/teacher/setting')
 def setting():
     if not session.get('teacher_verified'):
         return redirect('/login')
-    return render_template('setting.html')
+    data = db.teacher.find_one({'id': session['id']})
+    maxParents = data['maxParents'] if data != None else 10
+    reservedStudents = data['reservedStudents'] if data != None else []
+    return render_template('setting.html', t_maxParents=maxParents, t_reservedStudents=reservedStudents)
+
+
+@app.route('/teacher/setting/save', methods=['POST'])
+def setting_save():
+    if not session.get('teacher_verified'):
+        return redirect('/login')
+    data = db.teacher.find_one({'id': session['id']})
+    if data == None:
+        db.teacher.insert_one({'id': session['id'], 'maxParents': request.json.get('maxParents'), 'reservedStudents': request.json.get('reservedStudents'), 'queue': []})
+    else:
+        data['maxParents'] = request.json.get('maxParents')
+        data['reservedStudents'] = request.json.get('reservedStudents')
+        db.teacher.update_one({'id': session['id']}, {'$set': data})
+    return jsonify({'success': True})
 
 
 # ==================== 错误处理 ====================
