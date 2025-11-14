@@ -54,6 +54,16 @@ function showParentForm() {
     const container = document.getElementById('additional-form-container');
     container.innerHTML = `
         <div class="name-input-wrapper">
+            <label for="class-select">请选择班级:</label>
+            <select id="class-select" class="teacher-select">
+                <option value="">请选择班级</option>
+                <option>初二一班</option>
+                <option>初二二班</option>
+                <option>初二三班</option>
+                <option>初二四班</option>
+                <option>初二五班</option>
+                <option>初二六班</option>
+            </select>
             <label for="student-name-input">请输入孩子姓名:</label>
             <input type="text" id="student-name-input" placeholder="请输入孩子姓名" autocomplete="off">
             <button id="student-name-submit-btn">确认</button>
@@ -94,8 +104,10 @@ function showTeacherForm() {
 
 function submitStudentName() {
     const nameInput = document.getElementById('student-name-input');
+    const classNameSelect = document.getElementById('class-select');
     const nameError = document.getElementById('student-name-error');
     const name = nameInput.value.trim();
+    const className = classNameSelect.value;
 
     nameError.textContent = '';
 
@@ -104,12 +116,17 @@ function submitStudentName() {
         return;
     }
 
+    if (!className) {
+        nameError.textContent = '请选择班级';
+        return;
+    }
+
     fetch('/handle', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: name })
+        body: JSON.stringify({ name: name, className: className })
     })
     .then(response => response.json())
     .then(data => {

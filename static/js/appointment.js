@@ -67,12 +67,9 @@ function renderTeachers() {
         }
 
         card.innerHTML = `
-            <div class="teacher-name">${teacher.name}</div>
+            <div class="teacher-name">${teacher.subject}${teacher.name}</div>
             <div class="teacher-info">
-                <span><strong>班级:</strong> ${teacher.class}</span>
-            </div>
-            <div class="teacher-info">
-                <span><strong>位置:</strong> <span class="waiting-count">${teacher.location}</span></span>
+                <span><strong>地点:</strong> <span class="waiting-count">${teacher.location}</span></span>
             </div>
             <div class="teacher-info">
                 <span><strong>前方等待:</strong> <span class="waiting-count">${teacher.waiting}人</span></span>
@@ -121,14 +118,13 @@ function submitAppointment() {
     const scheduleList = document.getElementById('schedule-list');
     scheduleList.innerHTML = '';
 
-    selectedTeachers.forEach((teacher, index) => {
+    const appointmentPayload = selectedTeachers.map((teacher, index) => {
         const totalWaiting = selectedTeachers
             .slice(0, index)
             .reduce((sum, t) => sum + (Number.isFinite(Number(t.waiting)) ? Number(t.waiting) : 0), 0);
         const waitingCount = Number.isFinite(Number(teacher.waiting)) ? Number(teacher.waiting) : 0;
         const estimatedMinutes = (totalWaiting + waitingCount) * 10 + (index + 1) * 10;
         const estimatedTime = formatTime(estimatedMinutes);
-
         const scheduleItem = document.createElement('div');
         scheduleItem.className = 'schedule-item';
         scheduleItem.innerHTML = `
@@ -142,10 +138,30 @@ function submitAppointment() {
             </div>
         `;
         scheduleList.appendChild(scheduleItem);
+        return teacher.id;
     });
 
     document.getElementById('parent-name-display').textContent = name;
     showScreen('schedule-screen');
+
+    fetch('/parent/appointment/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            appointments: appointmentPayload
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || '预约保存失败，请稍后重试');
+            }
+        })
+        .catch(() => {
+            alert('预约保存失败，请检查网络后重试');
+        });
 }
 
 function formatTime(minutes) {
@@ -156,7 +172,7 @@ function formatTime(minutes) {
     return `${hours}:${mins}`;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     showNoticeModal();
 
     document.getElementById('close-notice-btn').addEventListener('click', closeNoticeModal);
