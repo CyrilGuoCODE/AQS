@@ -8,10 +8,50 @@
 </head>
 <body>
     <a href="/teacher" class="back-btn">返回</a>
-     <a href="/logout" class="logout-btn">登出</a>
+    <a href="/logout" class="logout-btn">登出</a>
 
-    <h1>教师设置</h1>
+    <div id="app">
+        <div class="container">
+            <h1>教师设置</h1>
+            
+            <div class="setting-section">
+                <h3>可谈话家长数量</h3>
+                <div class="setting-item">
+                    <label for="max-parents">最大可谈话家长数量:</label>
+                    <input type="number" id="max-parents" min="1" value="{{ t_maxParents }}" class="setting-input">
+                    <p class="setting-hint">设置该老师本次家长会最多可接待的家长数量</p>
+                </div>
+            </div>
+
+            <div class="setting-section">
+                <h3>提前预订名单</h3>
+                <div class="setting-item">
+                    <label for="parent-name-input">学生姓名:</label>
+                    <p class="setting-hint">添加需要提前预约的学生姓名</p>
+                    <div class="name-input-wrapper">
+                        <input type="text" id="parent-name-input" placeholder="请输入学生姓名" class="setting-input">
+                        <button id="add-parent-btn" class="button-primary">添加</button>
+                    </div>
+                </div>
+                
+                <div class="reserved-list">
+                    <h4>已添加名单</h4>
+                    <div id="reserved-list-container" class="reserved-list-container">
+                        <p class="empty-hint">暂无提前预约名单</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-actions">
+                <button id="save-settings-btn" class="button-primary submit-btn">保存设置</button>
+            </div>
+        </div>
+    </div>
    
+    <script>
+        const initialMaxParents = {{ t_maxParents }};
+        const initialReservedStudents = {{ t_reservedStudents | tojson | safe }};
+    </script>
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/setting.js') }}"></script>
 </body>

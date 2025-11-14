@@ -25,9 +25,9 @@
         <div id="schedule-screen" class="screen parent-screen {% if t_data %}active{% endif %}">
             <div class="container parent-container">
                 <div class="header-info">
-                    <h2>预约记录</h2>
-                    <p class="selected-count">欢迎，{{ t_name }}家长</p>
+                    <h2>欢迎，{{ t_name }}家长</h2>
                 </div>
+                <h2 style="text-align: center;">预约记录</h2>
                 <div class="schedule-list">
                     {% for appointment in t_data %}
                     <div class="schedule-item">
