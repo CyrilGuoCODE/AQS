@@ -133,7 +133,14 @@ def parent():
 def appointment():
     if not session.get('parent_verified'):
         return redirect('/login')
-    return render_template('appointment.html', t_name=session['name'], t_className=session['className'], t_teacher=teachers, t_notice=notice)
+    data = db.parent.find_one({'name': session['id']})
+    if data == None:
+        appointment = []
+        must = []
+    else:
+        appointment = data['appointment']
+        must = data['must']
+    return render_template('appointment.html', t_name=session['name'], t_className=session['className'], t_teacher=teachers, t_notice=notice, t_appointment=appointment, t_must=must)
 
 
 @app.route('/parent/appointment/save', methods=['POST'])
