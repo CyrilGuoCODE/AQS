@@ -129,16 +129,16 @@ def parent():
         return redirect('/login')
     data = db.parent.find_one({'name': session['id']})
     if data == None:
-        appointment = []
+        appointments = []
         must = []
     else:
-        appointment = []
+        appointments = []
         for i in data['appointment']:
-            appointment.append(teachers[int(i)-1])
+            appointments.append(teachers[int(i) - 1])
         must = []
         for i in data['must']:
             must.append(teachers[int(i)-1])
-    return render_template('parent.html', t_name=session['name'], t_appointment=appointment, t_must=must)
+    return render_template('parent.html', t_name=session['name'], t_appointment=appointments, t_must=must)
 
 
 @app.route('/parent/appointment')

@@ -484,6 +484,10 @@ label {
     padding: 20px;
 }
 
+.schedule-item.must {
+    border-color: #ff0000;
+}
+
 .schedule-item-header {
     display: flex;
     justify-content: space-between;
