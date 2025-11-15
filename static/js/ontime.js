@@ -56,8 +56,7 @@ class QueueManager {
         if (currentParent) {
             this.elements.currentParentCard.innerHTML = `
                 <div class="parent-info">
-                    <p><strong>家长姓名:</strong> ${this.escapeHtml(currentParent.parentName)}</p>
-                    <p><strong>学生姓名:</strong> ${this.escapeHtml(currentParent.studentName)}</p>
+                    <p><strong>预约家长:</strong> ${this.escapeHtml(currentParent.name)}家长</p>
                 </div>
             `;
             this.elements.currentParentCard.style.display = 'block';
@@ -80,8 +79,7 @@ class QueueManager {
                 card.innerHTML = `
                     <div class="queue-number">${index + 1}</div>
                     <div class="parent-info">
-                        <p><strong>家长姓名:</strong> ${this.escapeHtml(parent.parentName)}</p>
-                        <p><strong>学生姓名:</strong> ${this.escapeHtml(parent.studentName)}</p>
+                        <p><strong>预约家长:</strong> ${this.escapeHtml(parent.name)}家长</p>
                     </div>
                 `;
                 this.elements.waitingQueue.appendChild(card);
