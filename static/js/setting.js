@@ -43,20 +43,30 @@ function renderReservedList() {
 
 function addReservedParent() {
     const input = document.getElementById('parent-name-input');
+    const classSelect = document.getElementById('class-select');
     const name = input.value.trim();
+    const className = classSelect.value.trim();
     
     if (!name) {
         alert('请输入学生姓名');
         return;
     }
     
-    if (reservedStudents.includes(name)) {
+    if (!className) {
+        alert('请选择班级');
+        return;
+    }
+    
+    const fullName = className + name;
+    
+    if (reservedStudents.includes(fullName)) {
         alert('该学生已在名单中');
         return;
     }
     
-    reservedStudents.push(name);
+    reservedStudents.push(fullName);
     input.value = '';
+    classSelect.value = '';
     renderReservedList();
 }
 

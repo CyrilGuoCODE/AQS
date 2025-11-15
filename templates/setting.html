@@ -26,9 +26,17 @@
             <div class="setting-section">
                 <h3>提前预订名单</h3>
                 <div class="setting-item">
-                    <label for="parent-name-input">学生姓名:</label>
                     <p class="setting-hint">添加需要提前预约的学生姓名</p>
                     <div class="name-input-wrapper">
+                        <select id="class-select" class="setting-input class-select">
+                            <option value="">请选择班级</option>
+                            <option>初二一班</option>
+                            <option>初二二班</option>
+                            <option>初二三班</option>
+                            <option>初二四班</option>
+                            <option>初二五班</option>
+                            <option>初二六班</option>
+                        </select>
                         <input type="text" id="parent-name-input" placeholder="请输入学生姓名" class="setting-input">
                         <button id="add-parent-btn" class="button-primary">添加</button>
                     </div>

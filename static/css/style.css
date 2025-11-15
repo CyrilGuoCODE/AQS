@@ -118,6 +118,11 @@ h3 {
     min-width: 80px;
 }
 
+.setting-item .name-input-wrapper {
+    max-width: 50%;
+    margin: center;
+}
+
 input[type="text"],
 input[type="password"] {
     padding: 12px 16px;
@@ -904,6 +909,11 @@ label {
     border-color: #1890ff;
 }
 
+.setting-input.class-select {
+    flex: 0 0 30px;
+    min-width: 120px;
+}
+
 .setting-hint {
     margin-top: 8px;
     font-size: 14px;
@@ -947,7 +957,6 @@ label {
 .reserved-name {
     font-size: 16px;
     color: #333;
-    flex: 1;
 }
 
 .remove-btn {
