@@ -129,12 +129,12 @@ function submitAppointment() {
         scheduleItem.className = 'schedule-item';
         scheduleItem.innerHTML = `
             <div class="schedule-item-header">
-                <span class="schedule-teacher-name">${teacher.name}</span>
+                <span class="schedule-teacher-name">${teacher.subject}${teacher.name}</span>
                 <span class="schedule-time">预计时间: ${estimatedTime}</span>
             </div>
             <div class="schedule-details">
-                <p>班级: ${teacher.class}</p>
-                <p class="schedule-location">前往位置: ${teacher.location}</p>
+                <p class="schedule-location"><strong style="color: #333;">前方等待: </strong>???人</p>
+                <p class="schedule-location"><strong style="color: #333;">前往位置: </strong>${teacher.location}</p>
             </div>
         `;
         scheduleList.appendChild(scheduleItem);
