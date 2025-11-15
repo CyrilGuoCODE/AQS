@@ -51,10 +51,14 @@ with open('teacher.json', 'r', encoding='utf-8') as f:
 with open('notice.txt', 'r', encoding='utf-8') as file:
     notice = file.readlines()
 
+setting_memory = {}
 for i in teachers:
     data = db.teacher.find_one({'id': str(i['id'])})
     if data == None:
         db.teacher.insert_one({'id': str(i['id']), 'maxParents': 10, 'reservedStudents': [], 'queue': []})
+        setting_memory[str(i['id'])] = {'maxParents': 10, 'peoples': 0}
+    else:
+        setting_memory[str(i['id'])] = {'maxParents': data['maxParents'], 'peoples': len(data['queue'])}
 
 
 # ==================== Flask路由 ====================
@@ -148,7 +152,7 @@ def appointment():
     else:
         appointment = data['appointment']
         must = data['must']
-    return render_template('appointment.html', t_name=session['name'], t_className=session['className'], t_teacher=teachers, t_notice=notice, t_appointment=appointment, t_must=must)
+    return render_template('appointment.html', t_name=session['name'], t_className=session['className'], t_teacher=teachers, t_notice=notice, t_appointment=appointment, t_must=must, t_setting=setting_memory)
 
 
 @app.route('/parent/appointment/save', methods=['POST'])
@@ -159,14 +163,17 @@ def save():
     if data == None:
         db.parent.insert_one({'name': session['id'], 'appointment': request.json['appointments'], 'must': []})
         for i in request.json['appointments']:
-            db.teacher.update_one({'id': str(i)}, {'$addToSet': {'queue': {'name': session['id'], 'status': 'waiting'}}})
+            db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting'}}})
+            setting_memory[str(i)]['peoples'] += 1
     else:
         for i in data['appointment']:
             if i not in request.json['appointments']:
                 db.teacher.update_one({'id': str(i)}, {'$pull': {'queue': {'name': session['id']}}})
+                setting_memory[str(i)]['peoples'] -= 1
         for i in request.json['appointments']:
             if i not in data['appointment']:
-                db.teacher.update_one({'id': str(i)}, {'$addToSet': {'queue': {'name': session['id'], 'status': 'waiting'}}})
+                db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting'}}})
+                setting_memory[str(i)]['peoples'] += 1
         data['appointment'] = request.json['appointments']
         db.parent.update_one({'name': session['id']}, {'$set': data})
     return jsonify({'success': True})
@@ -220,18 +227,19 @@ def setting_save():
     data = db.teacher.find_one({'id': session['id']})
     if data == None:
         for i in request.json.get('reservedStudents'):
-            db.parent.update_one({'name': i}, {'$addToSet': {'must': int(session['id'])}})
+            db.parent.update_one({'name': i}, {'$push': {'must': int(session['id'])}})
         db.teacher.insert_one({'id': session['id'], 'maxParents': request.json.get('maxParents'), 'reservedStudents': request.json.get('reservedStudents'), 'queue': []})
     else:
         for i in request.json.get('reservedStudents'):
             if i not in data['reservedStudents']:
-                db.parent.update_one({'name': i}, {'$addToSet': {'must': int(session['id'])}})
+                db.parent.update_one({'name': i}, {'$push': {'must': int(session['id'])}})
         for i in data['reservedStudents']:
             if i not in request.json.get('reservedStudents'):
                 db.parent.update_one({'name': i}, {'$pull': {'must': int(session['id'])}})
         data['maxParents'] = request.json.get('maxParents')
         data['reservedStudents'] = request.json.get('reservedStudents')
         db.teacher.update_one({'id': session['id']}, {'$set': data})
+    setting_memory[session['id']]['maxParents'] = request.json.get('maxParents')
     return jsonify({'success': True})
 
 

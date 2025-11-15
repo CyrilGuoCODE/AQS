@@ -50,6 +50,7 @@
         const teachers = {{ t_teacher | tojson | safe }}
         const name = '{{ t_name }}'
         const className = '{{ t_className }}'
+        const setting = {{ t_setting | tojson | safe }}
     </script>
     <script src="{{ url_for('static', filename='js/appointment.js') }}"></script>
 </body>
