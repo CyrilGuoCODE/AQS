@@ -56,6 +56,16 @@ function showTeacherScreen() {
         
         selectedTeachers = [...lockedTeachers];
     }
+    
+    if (typeof previousAppointments !== 'undefined' && Array.isArray(previousAppointments)) {
+        previousAppointments.forEach(teacherId => {
+            const teacher = normalizedTeachers.find(t => String(t.id) === String(teacherId));
+            if (teacher && selectedTeachers.find(t => t.id === teacher.id) === undefined) {
+                selectedTeachers.push(teacher);
+            }
+        });
+    }
+    
     showScreen('teacher-screen');
     renderTeachers();
     updateSelectedCount();

@@ -53,6 +53,7 @@
         const setting = {{ t_setting | tojson | safe }}
         const startTime = '{{ t_start_time }}'
         const mustAppointments = {{ t_must | tojson | safe }}
+        const previousAppointments = {{ t_appointment | tojson | safe }}
     </script>
     <script src="{{ url_for('static', filename='js/appointment.js') }}"></script>
 </body>
