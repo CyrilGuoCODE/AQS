@@ -29,7 +29,7 @@
             <div class="container">
                 <div class="header-info">
                     <h2>选择预约老师</h2>
-                    <p class="selected-count">已选择: <span id="selected-count">0</span>/3</p>
+                    <p class="selected-count">已选择: <span id="selected-count">0</span></p>
                 </div>
                 <div id="teacher-grid" class="teacher-grid"></div>
                 <button id="submit-btn" class="submit-btn" disabled>提交预约</button>
@@ -52,6 +52,7 @@
         const className = '{{ t_className }}'
         const setting = {{ t_setting | tojson | safe }}
         const startTime = '{{ t_start_time }}'
+        const mustAppointments = {{ t_must | tojson | safe }}
     </script>
     <script src="{{ url_for('static', filename='js/appointment.js') }}"></script>
 </body>

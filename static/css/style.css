@@ -208,6 +208,34 @@ button:disabled {
     background-color: #e6f7ff;
 }
 
+.teacher-card.must-locked {
+    border-color: #ff4d4f;
+    background-color: #fff1f0;
+    position: relative;
+}
+
+.teacher-card.must-locked.selected {
+    border-color: #ff4d4f;
+    background-color: #fff1f0;
+}
+
+.teacher-card.must-locked:hover {
+    border-color: #ff4d4f;
+    box-shadow: 0 2px 8px rgba(255, 77, 79, 0.2);
+}
+
+.must-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ff4d4f;
+    color: #ffffff;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
 .teacher-card.disabled {
     background-color: #f5f5f5;
     border-color: #d9d9d9;

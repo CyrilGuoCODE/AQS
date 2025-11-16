@@ -6,6 +6,7 @@ const normalizedTeachers = (typeof teachers !== 'undefined' && Array.isArray(tea
 });
 
 let selectedTeachers = [];
+let lockedTeachers = [];
 let countdownTimer = null;
 
 function showScreen(screenId) {
@@ -48,6 +49,13 @@ function closeNoticeModal() {
 }
 
 function showTeacherScreen() {
+    if (typeof mustAppointments !== 'undefined' && Array.isArray(mustAppointments)) {
+        lockedTeachers = mustAppointments.map(teacherId => {
+            return normalizedTeachers.find(t => String(t.id) === String(teacherId));
+        }).filter(t => t !== undefined);
+        
+        selectedTeachers = [...lockedTeachers];
+    }
     showScreen('teacher-screen');
     renderTeachers();
     updateSelectedCount();
@@ -64,6 +72,7 @@ function renderTeachers() {
         const currentPeoples = teacherSetting.peoples || 0;
         const maxParents = teacherSetting.maxParents || 10;
         const isFull = currentPeoples >= maxParents;
+        const isMust = lockedTeachers.find(t => t.id === teacher.id) !== undefined;
         const appointmentStartTime = new Date(startTime);
         const estimatedTime = new Date(appointmentStartTime.getTime() + currentPeoples * 10 * 60000);
         const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
@@ -72,6 +81,9 @@ function renderTeachers() {
         card.className = 'teacher-card';
         if (isFull) {
             card.classList.add('disabled');
+        }
+        if (isMust) {
+            card.classList.add('must-locked');
         }
         if (selectedTeachers.find(t => t.id === teacher.id)) {
             card.classList.add('selected');
@@ -89,9 +101,10 @@ function renderTeachers() {
                 <span><strong>预计时间:</strong> <span class="waiting-count">${isFull ? '已满' : estimatedTimeStr}</span></span>
             </div>
             ${isFull ? '<div class="full-badge">已满</div>' : ''}
+            ${isMust ? '<div class="must-badge">指定</div>' : ''}
         `;
 
-        if (!isFull) {
+        if (!isFull && !isMust) {
             card.addEventListener('click', () => toggleTeacher(teacher, card));
         }
         grid.appendChild(card);
@@ -99,6 +112,13 @@ function renderTeachers() {
 }
 
 function toggleTeacher(teacher, cardElement) {
+    const isMust = lockedTeachers.find(t => t.id === teacher.id) !== undefined;
+    
+    if (isMust) {
+        alert('该老师指定了您，无法取消');
+        return;
+    }
+
     const teacherSetting = setting[String(teacher.id)] || {maxParents: 10, peoples: 0};
     const currentPeoples = teacherSetting.peoples || 0;
     const maxParents = teacherSetting.maxParents || 10;
@@ -114,8 +134,11 @@ function toggleTeacher(teacher, cardElement) {
         selectedTeachers.splice(index, 1);
         cardElement.classList.remove('selected');
     } else {
-        if (selectedTeachers.length >= 3) {
-            alert('最多只能选择3位老师');
+        const availableSlots = 3 - lockedTeachers.length;
+        const selectableCount = selectedTeachers.filter(t => lockedTeachers.find(lt => lt.id === t.id) === undefined).length;
+        
+        if (selectableCount >= availableSlots) {
+            alert(`最多只能选择${availableSlots}位可选老师（老师指定已占用${lockedTeachers.length}个名额）`);
             return;
         }
         selectedTeachers.push(teacher);
@@ -127,13 +150,19 @@ function toggleTeacher(teacher, cardElement) {
 
 function updateSelectedCount() {
     const count = selectedTeachers.length;
-    document.getElementById('selected-count').textContent = count;
+    const mustCount = lockedTeachers.length;
+    const availableSlots = 3 - mustCount;
+    const selectableCount = selectedTeachers.filter(t => lockedTeachers.find(lt => lt.id === t.id) === undefined).length;
+    
+    document.getElementById('selected-count').textContent = `${count}（指定${mustCount}，可选${selectableCount}/${availableSlots}）`;
     const submitBtn = document.getElementById('submit-btn');
     submitBtn.disabled = count === 0;
 }
 
 function submitAppointment() {
-    if (selectedTeachers.length === 0) {
+    const allSelectedTeachers = [...selectedTeachers];
+    
+    if (allSelectedTeachers.length === 0) {
         alert('请至少选择一位老师');
         return;
     }
@@ -144,20 +173,24 @@ function submitAppointment() {
     const appointmentStartTime = new Date(startTime);
     let currentPosition = 0;
 
-    const appointmentPayload = selectedTeachers.map((teacher, index) => {
+    allSelectedTeachers.forEach((teacher, index) => {
         const teacherSetting = setting[String(teacher.id)] || {maxParents: 10, peoples: 0};
         const waitingCount = teacherSetting.peoples || 0;
         const totalWaiting = currentPosition + waitingCount;
         const estimatedTime = new Date(appointmentStartTime.getTime() + totalWaiting * 10 * 60000);
         const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
+        const isMust = lockedTeachers.find(t => t.id === teacher.id) !== undefined;
         
         currentPosition += waitingCount;
         
         const scheduleItem = document.createElement('div');
         scheduleItem.className = 'schedule-item';
+        if (isMust) {
+            scheduleItem.classList.add('must');
+        }
         scheduleItem.innerHTML = `
             <div class="schedule-item-header">
-                <span class="schedule-teacher-name">${teacher.subject}${teacher.name}</span>
+                <span class="schedule-teacher-name">${teacher.subject}${teacher.name}${isMust ? ' <span style="color: #ff4d4f;">（老师指定）</span>' : ''}</span>
                 <span class="schedule-time">预计时间: ${estimatedTimeStr}</span>
             </div>
             <div class="schedule-details">
@@ -166,8 +199,12 @@ function submitAppointment() {
             </div>
         `;
         scheduleList.appendChild(scheduleItem);
-        return teacher.id;
     });
+
+    const selectableTeachers = allSelectedTeachers.filter(teacher => 
+        lockedTeachers.find(t => t.id === teacher.id) === undefined
+    );
+    const appointmentPayload = selectableTeachers.map(teacher => teacher.id);
 
     document.getElementById('parent-name-display').textContent = name;
     showScreen('schedule-screen');
