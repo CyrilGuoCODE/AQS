@@ -18,7 +18,7 @@ app.secret_key = secrets.token_hex(16)
 app.config['PARENT_KEY'] = 'parent'
 app.config['TEACHER_KEY'] = 'teacher'
 
-APPOINTMENT_START_TIME = datetime(2025, 11, 16, 19, 0, 0)
+APPOINTMENT_START_TIME = "2025-11-19T17:00:00"
 ENABLE_TIME_CHECK = True
 
 # 初始化速率限制器
@@ -143,7 +143,10 @@ def parent():
         must = []
         for i in data['must']:
             must.append(teachers[int(i)-1])
-    return render_template('parent.html', t_name=session['name'], t_appointment=appointments, t_must=must)
+    
+    start_time_str = APPOINTMENT_START_TIME
+    
+    return render_template('parent.html', t_name=session['name'], t_appointment=appointments, t_must=must, t_setting=setting_memory, t_start_time=start_time_str)
 
 
 @app.route('/parent/appointment')
@@ -169,7 +172,7 @@ def appointment():
         appointment = data['appointment']
         must = data['must']
     
-    start_time_str = '2025-11-19T17:00:00'
+    start_time_str = APPOINTMENT_START_TIME
     
     return render_template('appointment.html', t_name=session['name'], t_className=session['className'], t_teacher=teachers, t_notice=notice, t_appointment=appointment, t_must=must, t_setting=setting_memory, t_start_time=start_time_str)
 
