@@ -169,7 +169,7 @@ def appointment():
         appointment = data['appointment']
         must = data['must']
     
-    start_time_str = APPOINTMENT_START_TIME.strftime('%Y-%m-%dT%H:%M:%S')
+    start_time_str = '2025-11-19T17:00:00'
     
     return render_template('appointment.html', t_name=session['name'], t_className=session['className'], t_teacher=teachers, t_notice=notice, t_appointment=appointment, t_must=must, t_setting=setting_memory, t_start_time=start_time_str)
 
