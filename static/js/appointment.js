@@ -60,8 +60,19 @@ function renderTeachers() {
     normalizedTeachers.forEach(teacher => {
         if (teacher.class.indexOf(className) === -1) return;
 
+        const teacherSetting = setting[String(teacher.id)] || {maxParents: 10, peoples: 0};
+        const currentPeoples = teacherSetting.peoples || 0;
+        const maxParents = teacherSetting.maxParents || 10;
+        const isFull = currentPeoples >= maxParents;
+        const startTime = new Date('2025-11-16T18:00:00');
+        const estimatedTime = new Date(startTime.getTime() + currentPeoples * 10 * 60000);
+        const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
+
         const card = document.createElement('div');
         card.className = 'teacher-card';
+        if (isFull) {
+            card.classList.add('disabled');
+        }
         if (selectedTeachers.find(t => t.id === teacher.id)) {
             card.classList.add('selected');
         }
@@ -72,19 +83,31 @@ function renderTeachers() {
                 <span><strong>地点:</strong> <span class="waiting-count">${teacher.location}</span></span>
             </div>
             <div class="teacher-info">
-                <span><strong>前方等待:</strong> <span class="waiting-count">${teacher.waiting}人</span></span>
+                <span><strong>前方等待:</strong> <span class="waiting-count">${currentPeoples}人</span></span>
             </div>
             <div class="teacher-info">
-                <span><strong>预计时间:</strong> <span class="waiting-count">???</span></span>
+                <span><strong>预计时间:</strong> <span class="waiting-count">${isFull ? '已满' : estimatedTimeStr}</span></span>
             </div>
+            ${isFull ? '<div class="full-badge">已满</div>' : ''}
         `;
 
-        card.addEventListener('click', () => toggleTeacher(teacher, card));
+        if (!isFull) {
+            card.addEventListener('click', () => toggleTeacher(teacher, card));
+        }
         grid.appendChild(card);
     });
 }
 
 function toggleTeacher(teacher, cardElement) {
+    const teacherSetting = setting[String(teacher.id)] || {maxParents: 10, peoples: 0};
+    const currentPeoples = teacherSetting.peoples || 0;
+    const maxParents = teacherSetting.maxParents || 10;
+    
+    if (currentPeoples >= maxParents) {
+        alert('该老师的预约人数已满，无法预约');
+        return;
+    }
+
     const index = selectedTeachers.findIndex(t => t.id === teacher.id);
 
     if (index > -1) {
@@ -118,22 +141,27 @@ function submitAppointment() {
     const scheduleList = document.getElementById('schedule-list');
     scheduleList.innerHTML = '';
 
+    const startTime = new Date('2025-11-16T18:00:00');
+    let currentPosition = 0;
+
     const appointmentPayload = selectedTeachers.map((teacher, index) => {
-        const totalWaiting = selectedTeachers
-            .slice(0, index)
-            .reduce((sum, t) => sum + (Number.isFinite(Number(t.waiting)) ? Number(t.waiting) : 0), 0);
-        const waitingCount = Number.isFinite(Number(teacher.waiting)) ? Number(teacher.waiting) : 0;
-        const estimatedMinutes = (totalWaiting + waitingCount) * 10 + (index + 1) * 10;
-        const estimatedTime = formatTime(estimatedMinutes);
+        const teacherSetting = setting[String(teacher.id)] || {maxParents: 10, peoples: 0};
+        const waitingCount = teacherSetting.peoples || 0;
+        const totalWaiting = currentPosition + waitingCount;
+        const estimatedTime = new Date(startTime.getTime() + totalWaiting * 10 * 60000);
+        const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
+        
+        currentPosition += waitingCount;
+        
         const scheduleItem = document.createElement('div');
         scheduleItem.className = 'schedule-item';
         scheduleItem.innerHTML = `
             <div class="schedule-item-header">
                 <span class="schedule-teacher-name">${teacher.subject}${teacher.name}</span>
-                <span class="schedule-time">预计时间: ${estimatedTime}</span>
+                <span class="schedule-time">预计时间: ${estimatedTimeStr}</span>
             </div>
             <div class="schedule-details">
-                <p class="schedule-location"><strong style="color: #333;">前方等待: </strong>???人</p>
+                <p class="schedule-location"><strong style="color: #333;">前方等待: </strong>${waitingCount}人</p>
                 <p class="schedule-location"><strong style="color: #333;">前往位置: </strong>${teacher.location}</p>
             </div>
         `;
@@ -157,6 +185,7 @@ function submitAppointment() {
         .then(data => {
             if (!data.success) {
                 alert(data.message || '预约保存失败，请稍后重试');
+                showTeacherScreen();
             }
         })
         .catch(() => {

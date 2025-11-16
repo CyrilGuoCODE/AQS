@@ -147,6 +147,12 @@ def parent():
 def appointment():
     if not session.get('parent_verified'):
         return redirect('/login')
+    
+    for teacher_id in setting_memory:
+        teacher_data = db.teacher.find_one({'id': teacher_id})
+        if teacher_data != None:
+            setting_memory[teacher_id]['peoples'] = len(teacher_data['queue'])
+    
     data = db.parent.find_one({'name': session['id']})
     if data == None:
         appointment = []
@@ -161,22 +167,40 @@ def appointment():
 def save():
     if not session.get('parent_verified'):
         return redirect('/login')
+    
+    for teacher_id in setting_memory:
+        teacher_data = db.teacher.find_one({'id': teacher_id})
+        if teacher_data != None:
+            setting_memory[teacher_id]['peoples'] = len(teacher_data['queue'])
+    
     data = db.parent.find_one({'name': session['id']})
+    old_appointments = data['appointment'] if data != None else []
+    new_appointments = request.json['appointments']
+    
+    for teacher_id in new_appointments:
+        if teacher_id not in old_appointments:
+            teacher_setting = setting_memory.get(str(teacher_id), {})
+            current_peoples = teacher_setting.get('peoples', 0)
+            max_parents = teacher_setting.get('maxParents', 10)
+            
+            if current_peoples >= max_parents:
+                return jsonify({'success': False, 'message': f'老师{teacher_id}的预约人数已满，无法预约'})
+    
     if data == None:
-        db.parent.insert_one({'name': session['id'], 'appointment': request.json['appointments'], 'must': []})
-        for i in request.json['appointments']:
+        db.parent.insert_one({'name': session['id'], 'appointment': new_appointments, 'must': []})
+        for i in new_appointments:
             db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting'}}})
             setting_memory[str(i)]['peoples'] += 1
     else:
-        for i in data['appointment']:
-            if i not in request.json['appointments']:
+        for i in old_appointments:
+            if i not in new_appointments:
                 db.teacher.update_one({'id': str(i)}, {'$pull': {'queue': {'name': session['id']}}})
                 setting_memory[str(i)]['peoples'] -= 1
-        for i in request.json['appointments']:
-            if i not in data['appointment']:
+        for i in new_appointments:
+            if i not in old_appointments:
                 db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting'}}})
                 setting_memory[str(i)]['peoples'] += 1
-        data['appointment'] = request.json['appointments']
+        data['appointment'] = new_appointments
         db.parent.update_one({'name': session['id']}, {'$set': data})
     return jsonify({'success': True})
 
