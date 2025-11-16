@@ -51,6 +51,7 @@
         const name = '{{ t_name }}'
         const className = '{{ t_className }}'
         const setting = {{ t_setting | tojson | safe }}
+        const startTime = '{{ t_start_time }}'
     </script>
     <script src="{{ url_for('static', filename='js/appointment.js') }}"></script>
 </body>

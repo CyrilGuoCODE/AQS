@@ -64,8 +64,8 @@ function renderTeachers() {
         const currentPeoples = teacherSetting.peoples || 0;
         const maxParents = teacherSetting.maxParents || 10;
         const isFull = currentPeoples >= maxParents;
-        const startTime = new Date('2025-11-16T18:00:00');
-        const estimatedTime = new Date(startTime.getTime() + currentPeoples * 10 * 60000);
+        const appointmentStartTime = new Date(startTime);
+        const estimatedTime = new Date(appointmentStartTime.getTime() + currentPeoples * 10 * 60000);
         const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
 
         const card = document.createElement('div');
@@ -141,14 +141,14 @@ function submitAppointment() {
     const scheduleList = document.getElementById('schedule-list');
     scheduleList.innerHTML = '';
 
-    const startTime = new Date('2025-11-16T18:00:00');
+    const appointmentStartTime = new Date(startTime);
     let currentPosition = 0;
 
     const appointmentPayload = selectedTeachers.map((teacher, index) => {
         const teacherSetting = setting[String(teacher.id)] || {maxParents: 10, peoples: 0};
         const waitingCount = teacherSetting.peoples || 0;
         const totalWaiting = currentPosition + waitingCount;
-        const estimatedTime = new Date(startTime.getTime() + totalWaiting * 10 * 60000);
+        const estimatedTime = new Date(appointmentStartTime.getTime() + totalWaiting * 10 * 60000);
         const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
         
         currentPosition += waitingCount;

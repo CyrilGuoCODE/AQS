@@ -9,6 +9,7 @@ import json
 import os
 import pandas as pd
 from io import BytesIO
+from datetime import datetime
 
 
 # ==================== 初始化配置 ====================
@@ -17,6 +18,8 @@ app.secret_key = secrets.token_hex(16)
 app.config['PARENT_KEY'] = 'parent'
 app.config['TEACHER_KEY'] = 'teacher'
 
+APPOINTMENT_START_TIME = datetime(2025, 11, 16, 19, 0, 0)
+ENABLE_TIME_CHECK = True
 
 # 初始化速率限制器
 def get_real_ip():
@@ -148,6 +151,11 @@ def appointment():
     if not session.get('parent_verified'):
         return redirect('/login')
     
+    if ENABLE_TIME_CHECK:
+        current_time = datetime.now()
+        if current_time < APPOINTMENT_START_TIME:
+            return render_template('appointment_not_available.html', t_start_time=APPOINTMENT_START_TIME.strftime('%Y-%m-%d %H:%M:%S'))
+    
     for teacher_id in setting_memory:
         teacher_data = db.teacher.find_one({'id': teacher_id})
         if teacher_data != None:
@@ -160,13 +168,21 @@ def appointment():
     else:
         appointment = data['appointment']
         must = data['must']
-    return render_template('appointment.html', t_name=session['name'], t_className=session['className'], t_teacher=teachers, t_notice=notice, t_appointment=appointment, t_must=must, t_setting=setting_memory)
+    
+    start_time_str = APPOINTMENT_START_TIME.strftime('%Y-%m-%dT%H:%M:%S')
+    
+    return render_template('appointment.html', t_name=session['name'], t_className=session['className'], t_teacher=teachers, t_notice=notice, t_appointment=appointment, t_must=must, t_setting=setting_memory, t_start_time=start_time_str)
 
 
 @app.route('/parent/appointment/save', methods=['POST'])
 def save():
     if not session.get('parent_verified'):
         return redirect('/login')
+    
+    if ENABLE_TIME_CHECK:
+        current_time = datetime.now()
+        if current_time < APPOINTMENT_START_TIME:
+            return jsonify({'success': False, 'message': f'预约尚未开放，开放时间为：{APPOINTMENT_START_TIME.strftime("%Y-%m-%d %H:%M:%S")}'})
     
     for teacher_id in setting_memory:
         teacher_data = db.teacher.find_one({'id': teacher_id})
