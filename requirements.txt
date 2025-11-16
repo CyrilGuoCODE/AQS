@@ -6,3 +6,5 @@ python-engineio==3.13.2
 eventlet
 flask-limiter
 pymongo
+pandas
+openpyxl

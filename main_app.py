@@ -7,6 +7,8 @@ import time
 import secrets
 import json
 import os
+import pandas as pd
+from io import BytesIO
 
 
 # ==================== 初始化配置 ====================
@@ -242,6 +244,57 @@ def setting_save():
     setting_memory[session['id']]['maxParents'] = request.json.get('maxParents')
     return jsonify({'success': True})
 
+
+@app.route('/teacher/list/download')
+def list_download():
+    if not session.get('teacher_verified'):
+        return redirect('/login')
+    
+    teacher_name = session.get('name', '未知老师')
+    teacher_id = session.get('id')
+    
+    teacher_data = db.teacher.find_one({'id': teacher_id})
+    if teacher_data == None:
+        queue = []
+    else:
+        queue = teacher_data['queue']
+    
+    status_text_map = {
+        'waiting': '等待中',
+        'current': '进行中',
+        'completed': '已完成',
+        'skipped': '已跳过'
+    }
+    
+    data_list = []
+    for index, item in enumerate(queue, 1):
+        full_name = item.get('name', '')
+        status = item.get('status', 'waiting')
+        appointment_time = item.get('appointmentTime', item.get('appointment_time', '-'))
+        status_text = status_text_map.get(status, '未知')
+        
+        data_list.append({
+            '序号': index,
+            '学生姓名': full_name,
+            '预约时间': appointment_time,
+            '状态': status_text
+        })
+    
+    df = pd.DataFrame(data_list)
+    
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='预约列表')
+    
+    output.seek(0)
+    filename = f"{teacher_name}的预约列表.xlsx"
+    
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=filename
+    )
 
 # ==================== 错误处理 ====================
 @app.errorhandler(404)
