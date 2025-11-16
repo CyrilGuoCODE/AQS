@@ -18,7 +18,7 @@ app.secret_key = secrets.token_hex(16)
 app.config['PARENT_KEY'] = 'parent'
 app.config['TEACHER_KEY'] = 'teacher'
 
-APPOINTMENT_START_TIME = "2025-11-19T17:00:00"
+APPOINTMENT_START_TIME = datetime(2025, 11, 16, 19, 0, 0)
 ENABLE_TIME_CHECK = True
 
 # 初始化速率限制器
