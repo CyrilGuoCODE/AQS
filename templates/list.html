@@ -18,44 +18,30 @@
             </div>
 
             <div class="list-container">
-                {% if t_list and t_list|length > 0 %}
-                <div class="list-table-wrapper">
+                <div id="list-table-wrapper" class="list-table-wrapper">
                     <table class="list-table">
                         <thead>
                             <tr>
                                 <th>序号</th>
                                 <th>学生姓名</th>
-                                <th>班级</th>
                                 <th>预约时间</th>
                                 <th>状态</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {% for item in t_list %}
-                            <tr>
-                                <td>{{ loop.index }}</td>
-                                <td>{{ item.studentName or item.student_name or '-' }}</td>
-                                <td>{{ item.className or item.class_name or '-' }}</td>
-                                <td>{{ item.appointmentTime or item.appointment_time or '-' }}</td>
-                                <td>
-                                    <span class="status-badge status-{{ item.status or 'waiting' }}">
-                                        {{ item.statusText or item.status_text or '等待中' }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
+                        <tbody id="list-table-body">
                         </tbody>
                     </table>
                 </div>
-                {% else %}
-                <div class="empty-list">
+                <div id="empty-list" class="empty-list">
                     <p class="empty-hint">当前暂无预约名单</p>
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
    
+    <script>
+        const t_queue = {{ t_queue | tojson | safe }};
+    </script>
     <script src="{{ url_for('static', filename='js/list.js') }}"></script>
 </body>
 </html> 
