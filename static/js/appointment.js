@@ -163,8 +163,9 @@ function updateSelectedCount() {
     const mustCount = lockedTeachers.length;
     const availableSlots = 3 - mustCount;
     const selectableCount = selectedTeachers.filter(t => lockedTeachers.find(lt => lt.id === t.id) === undefined).length;
+    const remainingSlots = availableSlots - selectableCount;
     
-    document.getElementById('selected-count').textContent = `${count}（指定${mustCount}，可选${selectableCount}/${availableSlots}）`;
+    document.getElementById('selected-count').textContent = `${count}（指定${mustCount}，可选${remainingSlots}/${availableSlots}）`;
     const submitBtn = document.getElementById('submit-btn');
     submitBtn.disabled = count === 0;
 }
