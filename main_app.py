@@ -138,14 +138,10 @@ def parent():
         appointments = []
         must = []
     else:
-        appointments = []
-        for i in data['appointment']:
-            appointments.append(teachers[int(i) - 1])
-        must = []
-        for i in data['must']:
-            must.append(teachers[int(i)-1])
+        appointments = data['appointment']
+        must = data['must']
     
-    return render_template('parent.html', t_name=session['name'], t_appointment=appointments, t_must=must, t_setting=setting_memory, t_start_time=CONVERSION_START_TIME)
+    return render_template('parent.html', t_name=session['name'], t_appointment=appointments, t_must=must, t_setting=setting_memory, t_start_time=CONVERSION_START_TIME, t_teachers=teachers)
 
 
 @app.route('/parent/appointment')
@@ -202,8 +198,12 @@ def save():
             if current_peoples >= max_parents:
                 return jsonify({'success': False, 'message': f'老师{teacher_id}的预约人数已满，无法预约'})
     
+    appointments = []
+    for i in new_appointments:
+        appointments.append({'teacher_id': i, 'ranking': setting_memory[str(i)]['peoples']})
+    
     if data == None:
-        db.parent.insert_one({'name': session['id'], 'appointment': new_appointments, 'must': []})
+        db.parent.insert_one({'name': session['id'], 'appointment': appointments, 'must': []})
         for i in new_appointments:
             db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting'}}})
             setting_memory[str(i)]['peoples'] += 1
@@ -216,7 +216,7 @@ def save():
             if i not in old_appointments:
                 db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting'}}})
                 setting_memory[str(i)]['peoples'] += 1
-        data['appointment'] = new_appointments
+        data['appointment'] = appointments
         db.parent.update_one({'name': session['id']}, {'$set': data})
     return jsonify({'success': True})
 
@@ -262,6 +262,20 @@ def setting():
     return render_template('setting.html', t_maxParents=maxParents, t_reservedStudents=reservedStudents)
 
 
+def add(name, id):
+    data = db.parent.find_one({'name': name})
+    if data != None:
+        db.parent.update_one({'name': name}, {'$push': {'must': {'teacher_id': id, 'ranking': setting_memory[str(id)]['peoples']}}})
+    else:
+        db.parent.insert_one({'name': name, 'appointment': [], 'must': [{'teacher_id': id, 'ranking': setting_memory[str(id)]['peoples']}]})
+    setting_memory[str(id)] += 1
+
+def delete(name, id):
+    data = db.parent.find_one({'name': name})
+    if data != None:
+        db.parent.update_one({'name': name}, {'$pull': {'must': {'teacher_id': id}}})
+
+
 @app.route('/teacher/setting/save', methods=['POST'])
 def setting_save():
     if not session.get('teacher_verified'):
@@ -269,15 +283,15 @@ def setting_save():
     data = db.teacher.find_one({'id': session['id']})
     if data == None:
         for i in request.json.get('reservedStudents'):
-            db.parent.update_one({'name': i}, {'$push': {'must': int(session['id'])}})
+            add(i, int(session['id']))
         db.teacher.insert_one({'id': session['id'], 'maxParents': request.json.get('maxParents'), 'reservedStudents': request.json.get('reservedStudents'), 'queue': []})
     else:
         for i in request.json.get('reservedStudents'):
             if i not in data['reservedStudents']:
-                db.parent.update_one({'name': i}, {'$push': {'must': int(session['id'])}})
+                add(i, int(session['id']))
         for i in data['reservedStudents']:
             if i not in request.json.get('reservedStudents'):
-                db.parent.update_one({'name': i}, {'$pull': {'must': int(session['id'])}})
+                delete(i, int(session['id']))
         data['maxParents'] = request.json.get('maxParents')
         data['reservedStudents'] = request.json.get('reservedStudents')
         db.teacher.update_one({'id': session['id']}, {'$set': data})
@@ -343,28 +357,28 @@ def handle_404(error):
     return redirect('/login')
 
 
-@app.errorhandler(Exception)
-def handle_500(error):
-    """错误处理-500"""
-    client_ip = get_real_ip()
-    route_info = f"{request.method} {request.path}"
-    error_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    error_msg = f"[{error_time}] IP: {client_ip} - Route: {route_info} - Error: {str(error)}\n\n"
-
-    with open('log/error.log', 'a', encoding='utf-8') as f:
-        f.write(error_msg)
-    return redirect('/login')
-
-
-@socketio.on_error()
-def handle_500(error):
-    """错误处理-ws错误"""
-    client_ip = get_real_ip()
-    error_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    error_msg = f"[{error_time}] IP: {client_ip} - Route: WebSocketEvent - Error: {str(error)}\n\n"
-
-    with open('log/error.log', 'a', encoding='utf-8') as f:
-        f.write(error_msg)
+# @app.errorhandler(Exception)
+# def handle_500(error):
+#     """错误处理-500"""
+#     client_ip = get_real_ip()
+#     route_info = f"{request.method} {request.path}"
+#     error_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+#     error_msg = f"[{error_time}] IP: {client_ip} - Route: {route_info} - Error: {str(error)}\n\n"
+#
+#     with open('log/error.log', 'a', encoding='utf-8') as f:
+#         f.write(error_msg)
+#     return redirect('/login')
+#
+#
+# @socketio.on_error()
+# def handle_500(error):
+#     """错误处理-ws错误"""
+#     client_ip = get_real_ip()
+#     error_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+#     error_msg = f"[{error_time}] IP: {client_ip} - Route: WebSocketEvent - Error: {str(error)}\n\n"
+#
+#     with open('log/error.log', 'a', encoding='utf-8') as f:
+#         f.write(error_msg)
 
 
 # 添加速率限制错误处理

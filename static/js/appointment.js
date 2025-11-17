@@ -1,6 +1,6 @@
 const normalizedTeachers = (typeof teachers !== 'undefined' && Array.isArray(teachers) ? teachers : []).map((teacher, index) => {
     const fallbackId = `teacher-${index + 1}`;
-    const id = teacher.id ?? fallbackId;
+    const id = teacher.id ?? teacher._id ?? fallbackId;
     const waiting = Number.isFinite(Number(teacher.waiting)) ? Number(teacher.waiting) : 0;
     return { ...teacher, id, waiting };
 });
@@ -8,36 +8,6 @@ const normalizedTeachers = (typeof teachers !== 'undefined' && Array.isArray(tea
 let selectedTeachers = [];
 let lockedTeachers = [];
 let countdownTimer = null;
-const mustAppointmentEntries = normalizeAppointmentEntries(typeof mustAppointments !== 'undefined' ? mustAppointments : null);
-const previousAppointmentEntries = normalizeAppointmentEntries(typeof previousAppointments !== 'undefined' ? previousAppointments : null);
-const mustAppointmentIds = new Set(mustAppointmentEntries.map(entry => entry.teacherId));
-const previousAppointmentIds = new Set(previousAppointmentEntries.map(entry => entry.teacherId));
-
-function normalizeAppointmentEntries(source) {
-    if (!source) return [];
-    if (Array.isArray(source)) {
-        return source.map(item => {
-            if (item && typeof item === 'object') {
-                const teacherId = item.teacher_id ?? item.id ?? item._id;
-                if (teacherId === undefined || teacherId === null) return null;
-                return { teacherId: String(teacherId), ranking: item.ranking };
-            }
-            return { teacherId: String(item), ranking: undefined };
-        }).filter(entry => entry !== null);
-    }
-    if (typeof source === 'object') {
-        return Object.keys(source).map(key => {
-            const value = source[key];
-            if (value && typeof value === 'object') {
-                const teacherId = value.teacher_id ?? key;
-                if (teacherId === undefined || teacherId === null) return null;
-                return { teacherId: String(teacherId), ranking: value.ranking };
-            }
-            return { teacherId: String(key), ranking: value && typeof value === 'object' ? value.ranking : undefined };
-        }).filter(entry => entry !== null);
-    }
-    return [];
-}
 
 function showScreen(screenId) {
     document.querySelectorAll('.screen').forEach(screen => {
@@ -79,16 +49,22 @@ function closeNoticeModal() {
 }
 
 function showTeacherScreen() {
-    lockedTeachers = Array.from(mustAppointmentIds).map(teacherId => {
-        return normalizedTeachers.find(t => String(t.id) === String(teacherId));
-    }).filter(t => t !== undefined);
-    selectedTeachers = [...lockedTeachers];
-    previousAppointmentIds.forEach(teacherId => {
-        const teacher = normalizedTeachers.find(t => String(t.id) === String(teacherId));
-        if (teacher && selectedTeachers.find(t => t.id === teacher.id) === undefined) {
-            selectedTeachers.push(teacher);
-        }
-    });
+    if (typeof mustAppointments !== 'undefined' && Array.isArray(mustAppointments)) {
+        lockedTeachers = mustAppointments.map(teacherId => {
+            return normalizedTeachers.find(t => String(t.id) === String(teacherId));
+        }).filter(t => t !== undefined);
+        
+        selectedTeachers = [...lockedTeachers];
+    }
+    
+    if (typeof previousAppointments !== 'undefined' && Array.isArray(previousAppointments)) {
+        previousAppointments.forEach(teacherId => {
+            const teacher = normalizedTeachers.find(t => String(t.id) === String(teacherId));
+            if (teacher && selectedTeachers.find(t => t.id === teacher.id) === undefined) {
+                selectedTeachers.push(teacher);
+            }
+        });
+    }
     
     showScreen('teacher-screen');
     renderTeachers();

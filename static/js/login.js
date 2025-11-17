@@ -8,14 +8,6 @@ document.getElementById('key-input').addEventListener('keypress', (e) => {
 
 document.getElementById('key-submit-btn').addEventListener('click', checkKey);
 
-const presetParams = new URLSearchParams(window.location.search);
-const presetKey = presetParams.get('pwd');
-if (presetKey) {
-    const keyInput = document.getElementById('key-input');
-    keyInput.value = presetKey;
-    checkKey();
-}
-
 function checkKey() {
     const keyInput = document.getElementById('key-input');
     const keyError = document.getElementById('key-error');
