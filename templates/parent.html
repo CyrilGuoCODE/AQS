@@ -15,51 +15,10 @@
                 <div class="header-info">
                     <h2>欢迎，{{ t_name }}家长</h2>
                 </div>
-                <h2 style="text-align: center;">预约记录</h2>
-                <div class="schedule-list" id="schedule-list">
-                    {% for must in t_must %}
-                    <div class="schedule-item must" data-teacher-id="{{ must.id }}">
-                        <div class="schedule-item-header">
-                            <span class="schedule-teacher-name">{{ must.subject }}{{ must.name }}</span>
-                        </div>
-                        <div class="schedule-details">
-                            <div class="teacher-info">
-                                <span><strong>地点:</strong> <span class="waiting-count">{{must.location}}</span></span>
-                            </div>
-                            <div class="teacher-info">
-                                <span><strong>前方等待:</strong> <span class="waiting-count" data-waiting="{{ must.id }}">???人</span></span>
-                            </div>
-                            <div class="teacher-info">
-                                <span><strong>预计时间:</strong> <span class="waiting-count" data-time="{{ must.id }}">???</span></span>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                    {% for appointment in t_appointment %}
-                    <div class="schedule-item" data-teacher-id="{{ appointment.id }}">
-                        <div class="schedule-item-header">
-                            <span class="schedule-teacher-name">{{ appointment.subject }}{{ appointment.name }}</span>
-                        </div>
-                        <div class="schedule-details">
-                            <div class="teacher-info">
-                                <span><strong>地点:</strong> <span class="waiting-count">{{appointment.location}}</span></span>
-                            </div>
-                            <div class="teacher-info">
-                                <span><strong>前方等待:</strong> <span class="waiting-count" data-waiting="{{ appointment.id }}">???人</span></span>
-                            </div>
-                            <div class="teacher-info">
-                                <span><strong>预计时间:</strong> <span class="waiting-count" data-time="{{ appointment.id }}">???</span></span>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                    {% if t_must == [] and t_appointment == [] %}
-                    <p class="info-text">当前暂无预约记录</p>
-                    <a href="/parent/appointment" class="submit-btn button-primary">前往预约</a>
-                    {% else %}
-                    <a href="/parent/appointment" class="submit-btn button-primary">更改预约</a>
-                    {% endif %}
-                </div>
+                <h2>预约记录</h2>
+                <div class="schedule-list" id="schedule-list"></div>
+                <p class="info-text" id="empty-text" hidden>当前暂无预约记录</p>
+                <a href="/parent/appointment" class="submit-btn button-primary" id="schedule-action-btn">加载中...</a>
             </div>
         </div>
     </div>
