@@ -284,6 +284,8 @@ def delete(name, id):
     data = db.parent.find_one({'name': name})
     if data != None:
         db.parent.update_one({'name': name}, {'$pull': {'must': {'teacher_id': id}}})
+        setting_memory[str(id)] -= 1
+    db.teacher.update_one({'id': str(id)}, {'$pull': {'queue': {'name': name}}})
 
 
 @app.route('/teacher/setting/save', methods=['POST'])
@@ -302,9 +304,7 @@ def setting_save():
         for i in data['reservedStudents']:
             if i not in request.json.get('reservedStudents'):
                 delete(i, int(session['id']))
-        data['maxParents'] = request.json.get('maxParents')
-        data['reservedStudents'] = request.json.get('reservedStudents')
-        db.teacher.update_one({'id': session['id']}, {'$set': data})
+        db.teacher.update_one({'id': session['id']},{'$set': {'maxParents': request.json.get('maxParents'),'reservedStudents': request.json.get('reservedStudents')}})
     setting_memory[session['id']]['maxParents'] = request.json.get('maxParents')
     return jsonify({'success': True})
 
