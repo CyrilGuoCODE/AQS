@@ -81,7 +81,7 @@ def login():
 
 
 @app.route('/verify-key', methods=['POST'])
-@limiter.limit('1 per 5 seconds,10 per hour')
+@limiter.limit('10 per hour')
 def verify_key():
     key = request.json['key'].strip()
     if key == app.config['PARENT_KEY']:
@@ -106,7 +106,7 @@ def get_teachers():
 
 
 @app.route('/handle', methods=['POST'])
-@limiter.limit('1 per 5 seconds,10 per hour')
+@limiter.limit('10 per hour')
 def handle():
     if session['role'] == 'parent' and 'parent_verified' in session:
         session['name'] = request.json['name']
@@ -277,14 +277,14 @@ def add(name, id):
         db.parent.update_one({'name': name}, {'$push': {'must': {'teacher_id': id, 'ranking': setting_memory[str(id)]['peoples']}}})
     else:
         db.parent.insert_one({'name': name, 'appointment': [], 'must': [{'teacher_id': id, 'ranking': setting_memory[str(id)]['peoples']}]})
-    setting_memory[str(id)] += 1
+    setting_memory[str(id)]['peoples'] += 1
     db.teacher.update_one({'id': str(id)}, {'$push': {'queue': {'name': name, 'status': 'waiting'}}})
 
 def delete(name, id):
     data = db.parent.find_one({'name': name})
     if data != None:
         db.parent.update_one({'name': name}, {'$pull': {'must': {'teacher_id': id}}})
-        setting_memory[str(id)] -= 1
+        setting_memory[str(id)]['peoples'] -= 1
     db.teacher.update_one({'id': str(id)}, {'$pull': {'queue': {'name': name}}})
 
 
@@ -367,28 +367,28 @@ def handle_404(error):
     return redirect('/login')
 
 
-# @app.errorhandler(Exception)
-# def handle_500(error):
-#     """错误处理-500"""
-#     client_ip = get_real_ip()
-#     route_info = f"{request.method} {request.path}"
-#     error_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-#     error_msg = f"[{error_time}] IP: {client_ip} - Route: {route_info} - Error: {str(error)}\n\n"
-#
-#     with open('log/error.log', 'a', encoding='utf-8') as f:
-#         f.write(error_msg)
-#     return redirect('/login')
-#
-#
-# @socketio.on_error()
-# def handle_500(error):
-#     """错误处理-ws错误"""
-#     client_ip = get_real_ip()
-#     error_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-#     error_msg = f"[{error_time}] IP: {client_ip} - Route: WebSocketEvent - Error: {str(error)}\n\n"
-#
-#     with open('log/error.log', 'a', encoding='utf-8') as f:
-#         f.write(error_msg)
+@app.errorhandler(Exception)
+def handle_500(error):
+    """错误处理-500"""
+    client_ip = get_real_ip()
+    route_info = f"{request.method} {request.path}"
+    error_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    error_msg = f"[{error_time}] IP: {client_ip} - Route: {route_info} - Error: {str(error)}\n\n"
+
+    with open('log/error.log', 'a', encoding='utf-8') as f:
+        f.write(error_msg)
+    return redirect('/login')
+
+
+@socketio.on_error()
+def handle_500(error):
+    """错误处理-ws错误"""
+    client_ip = get_real_ip()
+    error_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    error_msg = f"[{error_time}] IP: {client_ip} - Route: WebSocketEvent - Error: {str(error)}\n\n"
+
+    with open('log/error.log', 'a', encoding='utf-8') as f:
+        f.write(error_msg)
 
 
 # 添加速率限制错误处理

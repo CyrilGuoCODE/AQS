@@ -20,11 +20,11 @@
                     {% for must in t_must %}
                     <div class="schedule-item must" data-teacher-id="{{ must.teacher_id }}">
                         <div class="schedule-item-header">
-                            <span class="schedule-teacher-name">{{ t_teachers[must.teacher_id].subject }}{{ t_teachers[must.teacher_id].name }}</span>
+                            <span class="schedule-teacher-name">{{ t_teachers[must.teacher_id-1].subject }}{{ t_teachers[must.teacher_id-1].name }}</span>
                         </div>
                         <div class="schedule-details">
                             <div class="teacher-info">
-                                <span><strong>地点:</strong> <span class="waiting-count">{{t_teachers[must.teacher_id].location}}</span></span>
+                                <span><strong>地点:</strong> <span class="waiting-count">{{t_teachers[must.teacher_id-1].location}}</span></span>
                             </div>
                             <div class="teacher-info">
                                 <span><strong>前方等待:</strong> <span class="waiting-count" data-waiting="{{ must.teacher_id }}">???人</span></span>
@@ -38,11 +38,11 @@
                     {% for appointment in t_appointment %}
                     <div class="schedule-item" data-teacher-id="{{ appointment.teacher_id }}">
                         <div class="schedule-item-header">
-                            <span class="schedule-teacher-name">{{ t_teachers[appointment.teacher_id].subject }}{{ t_teachers[appointment.teacher_id].name }}</span>
+                            <span class="schedule-teacher-name">{{ t_teachers[appointment.teacher_id-1].subject }}{{ t_teachers[appointment.teacher_id-1].name }}</span>
                         </div>
                         <div class="schedule-details">
                             <div class="teacher-info">
-                                <span><strong>地点:</strong> <span class="waiting-count">{{t_teachers[appointment.teacher_id].location}}</span></span>
+                                <span><strong>地点:</strong> <span class="waiting-count">{{t_teachers[appointment.teacher_id-1].location}}</span></span>
                             </div>
                             <div class="teacher-info">
                                 <span><strong>前方等待:</strong> <span class="waiting-count" data-waiting="{{ appointment.teacher_id }}">???人</span></span>

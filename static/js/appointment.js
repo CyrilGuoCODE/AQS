@@ -79,6 +79,7 @@ function renderTeachers() {
         const maxParents = teacherSetting.maxParents || 10;
         const isMust = lockedTeachers.find(t => t.id === teacher.id) !== undefined;
         if (!isMust && test.find(t => t.id === teacher.id)) currentPeoples = previousAppointments.find(t => t.teacher_id === teacher.id).ranking;
+        if (isMust) currentPeoples = mustAppointments.find(t => t.teacher_id === teacher.id).ranking;
         const isFull = currentPeoples >= maxParents;
         const appointmentStartTime = new Date(startTime);
         const estimatedTime = new Date(appointmentStartTime.getTime() + currentPeoples * 10 * 60000);
@@ -185,6 +186,7 @@ function submitAppointment() {
         let waitingCount = teacherSetting.peoples || 0;
         const isMust = lockedTeachers.find(t => t.id === teacher.id) !== undefined;
         if (!isMust && test.find(t => t.id === teacher.id)) waitingCount = previousAppointments.find(t => t.teacher_id === teacher.id).ranking;
+        if (isMust) waitingCount = mustAppointments.find(t => t.teacher_id === teacher.id).ranking;
         const totalWaiting = waitingCount;
         const estimatedTime = new Date(appointmentStartTime.getTime() + totalWaiting * 10 * 60000);
         const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
