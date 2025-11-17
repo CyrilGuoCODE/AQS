@@ -17,8 +17,9 @@
                 </div>
                 <h2 style="text-align: center;">预约记录</h2>
                 <div class="schedule-list" id="schedule-list">
-                    {% for must in t_must %}
-                    <div class="schedule-item must" data-teacher-id="{{ must.id }}">
+                    {% for teacher_id, must in t_must.items() %}
+                    {% set current_id = must.teacher_id or must.id or teacher_id %}
+                    <div class="schedule-item must" data-teacher-id="{{ current_id }}">
                         <div class="schedule-item-header">
                             <span class="schedule-teacher-name">{{ must.subject }}{{ must.name }}</span>
                         </div>
@@ -27,16 +28,17 @@
                                 <span><strong>地点:</strong> <span class="waiting-count">{{must.location}}</span></span>
                             </div>
                             <div class="teacher-info">
-                                <span><strong>前方等待:</strong> <span class="waiting-count" data-waiting="{{ must.id }}">???人</span></span>
+                                <span><strong>前方等待:</strong> <span class="waiting-count" data-waiting="{{ current_id }}">???人</span></span>
                             </div>
                             <div class="teacher-info">
-                                <span><strong>预计时间:</strong> <span class="waiting-count" data-time="{{ must.id }}">???</span></span>
+                                <span><strong>预计时间:</strong> <span class="waiting-count" data-time="{{ current_id }}">???</span></span>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
-                    {% for appointment in t_appointment %}
-                    <div class="schedule-item" data-teacher-id="{{ appointment.id }}">
+                    {% for teacher_id, appointment in t_appointment.items() %}
+                    {% set current_id = appointment.teacher_id or appointment.id or teacher_id %}
+                    <div class="schedule-item" data-teacher-id="{{ current_id }}">
                         <div class="schedule-item-header">
                             <span class="schedule-teacher-name">{{ appointment.subject }}{{ appointment.name }}</span>
                         </div>
@@ -45,15 +47,15 @@
                                 <span><strong>地点:</strong> <span class="waiting-count">{{appointment.location}}</span></span>
                             </div>
                             <div class="teacher-info">
-                                <span><strong>前方等待:</strong> <span class="waiting-count" data-waiting="{{ appointment.id }}">???人</span></span>
+                                <span><strong>前方等待:</strong> <span class="waiting-count" data-waiting="{{ current_id }}">???人</span></span>
                             </div>
                             <div class="teacher-info">
-                                <span><strong>预计时间:</strong> <span class="waiting-count" data-time="{{ appointment.id }}">???</span></span>
+                                <span><strong>预计时间:</strong> <span class="waiting-count" data-time="{{ current_id }}">???</span></span>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
-                    {% if t_must == [] and t_appointment == [] %}
+                    {% if not t_must and not t_appointment %}
                     <p class="info-text">当前暂无预约记录</p>
                     <a href="/parent/appointment" class="submit-btn button-primary">前往预约</a>
                     {% else %}
