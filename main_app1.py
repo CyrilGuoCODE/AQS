@@ -207,7 +207,9 @@ def save():
             if current_peoples >= max_parents:
                 return jsonify({'success': False, 'message': f'老师{teacher_id}的预约人数已满，无法预约'})
     
-    appointments = data['appointment']
+    appointments = []
+    for i in new_appointments:
+        appointments.append({'teacher_id': i, 'ranking': setting_memory[str(i)]['peoples']})
     
     if data == None:
         db.parent.insert_one({'name': session['id'], 'appointment': appointments, 'must': []})
@@ -218,11 +220,9 @@ def save():
         for i in old_appointments:
             if i not in new_appointments:
                 dele(str(i), session['id'])
-                appointments = [item for item in appointments if item.get('teacher_id') != i]
                 setting_memory[str(i)]['peoples'] -= 1
         for i in new_appointments:
             if i not in old_appointments:
-                appointments.append({'teacher_id': i, 'ranking': setting_memory[str(i)]['peoples']})
                 db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting'}}})
                 setting_memory[str(i)]['peoples'] += 1
         data['appointment'] = appointments
