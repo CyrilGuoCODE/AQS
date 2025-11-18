@@ -1,0 +1,29 @@
+# Flask核心框架
+flask==2.2.3
+werkzeug==2.2.3
+
+# WebSocket支持
+flask-socketio==5.3.4
+python-socketio==5.7.2
+python-engineio==4.4.1
+
+# 异步支持
+eventlet==0.33.3
+
+# 速率限制
+flask-limiter==3.3.1
+
+# 数据库
+pymongo==4.3.3
+redis==4.5.4  # 用于缓存和会话存储
+
+# 数据处理
+pandas==2.0.1
+openpyxl==3.1.2
+
+# 性能监控和日志
+psutil==5.9.5  # 系统资源监控
+gunicorn==20.1.0  # 生产环境WSGI服务器
+
+# 安全
+cryptography==40.0.2  # 加密功能
