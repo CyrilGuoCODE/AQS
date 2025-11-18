@@ -218,11 +218,12 @@ def save():
                 return jsonify({'success': False, 'message': f'老师{teacher_id}的预约人数已满，无法预约'})
         
     if data == None:
-        appointments = [] 
-        db.parent.insert_one({'name': session['id'], 'appointment': appointments, 'must': []})
+        appointments = []
         for i in new_appointments:
+            appointments.append({'teacher_id': i, 'ranking': setting_memory[str(i)]['peoples']})
             db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting'}}})
             setting_memory[str(i)]['peoples'] += 1
+        db.parent.insert_one({'name': session['id'], 'appointment': appointments, 'must': []})
     else:
         appointments = data['appointment']
         for i in old_appointments:
