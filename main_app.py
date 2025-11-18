@@ -9,7 +9,7 @@ import json
 import os
 import pandas as pd
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 # ==================== 初始化配置 ====================
@@ -268,7 +268,7 @@ def list():
         data = []
     else:
         data = data['queue']
-    return render_template('list.html', t_queue=data)
+    return render_template('list.html', t_queue=data, t_start_time=APPOINTMENT_START_TIME)
 
 
 @app.route('/teacher/setting')
@@ -344,7 +344,10 @@ def list_download():
     for index, item in enumerate(queue, 1):
         full_name = item.get('name', '')
         status = item.get('status', 'waiting')
-        appointment_time = item.get('appointmentTime', item.get('appointment_time', '-'))
+        appointment_time = item.get('appointmentTime', item.get('appointment_time'))
+        if not appointment_time:
+            appointment_datetime = APPOINTMENT_START_TIME + timedelta(minutes=(index-1) * 10)
+            appointment_time = appointment_datetime.strftime('%H:%M')
         status_text = status_text_map.get(status, '未知')
         
         data_list.append({

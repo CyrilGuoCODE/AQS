@@ -28,7 +28,13 @@ document.addEventListener('DOMContentLoaded', function() {
         queue.forEach((item, index) => {
             const fullName = item.name || '';
             const status = item.status || 'waiting';
-            const appointmentTime = item.appointmentTime || item.appointment_time || '-';
+            let appointmentTime = item.appointmentTime || item.appointment_time;
+            if (!appointmentTime && typeof t_start_time !== 'undefined') {
+                const appointmentStartTime = new Date(t_start_time);
+                const estimatedTime = new Date(appointmentStartTime.getTime() + index * 10 * 60000);
+                appointmentTime = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
+            }
+            appointmentTime = appointmentTime || '-';
             const statusText = statusTextMap[status] || '未知';
             
             const row = document.createElement('tr');

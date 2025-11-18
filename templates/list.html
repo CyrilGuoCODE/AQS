@@ -41,6 +41,7 @@
    
     <script>
         const t_queue = {{ t_queue | tojson | safe }};
+        const t_start_time = '{{ t_start_time }}';
     </script>
     <script src="{{ url_for('static', filename='js/list.js') }}"></script>
 </body>
