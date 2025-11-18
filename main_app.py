@@ -54,6 +54,9 @@ db = client['aqs']
 with open('teacher.json', 'r', encoding='utf-8') as f:
     teachers = json.load(f)
 
+with open('class.json', 'r', encoding='utf-8') as f:
+    classes_data = json.load(f)
+
 with open('notice.txt', 'r', encoding='utf-8') as file:
     notice = file.readlines()
 
@@ -104,6 +107,13 @@ def get_teachers():
         return redirect('/login')
     return jsonify(teachers)
 
+
+@app.route('/get_classes')
+def get_classes():
+    if not session.get('parent_verified'):
+        return redirect('/login')
+    grade = request.args.get('grade', '初一')
+    return jsonify({'grade': grade, 'classes': classes_data.get(grade, [])})
 
 @app.route('/handle', methods=['POST'])
 @limiter.limit('10 per hour')

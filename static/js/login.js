@@ -65,12 +65,6 @@ function showParentForm() {
             <label for="class-select">请选择班级:</label>
             <select id="class-select" class="teacher-select">
                 <option value="">请选择班级</option>
-                <option>初二一班</option>
-                <option>初二二班</option>
-                <option>初二三班</option>
-                <option>初二四班</option>
-                <option>初二五班</option>
-                <option>初二六班</option>
             </select>
             <label for="student-name-input">请输入孩子姓名:</label>
             <input type="text" id="student-name-input" placeholder="请输入孩子姓名" autocomplete="off">
@@ -90,6 +84,7 @@ function showParentForm() {
     
     submitBtn.addEventListener('click', submitStudentName);
     nameInput.focus();
+    loadClasses('初一');
 }
 
 function showTeacherForm() {
@@ -164,6 +159,27 @@ function loadTeachers() {
     })
     .catch(error => {
         console.error('Failed to load teachers:', error);
+    });
+}
+
+function loadClasses(grade) {
+    fetch(`/get_classes?grade=${encodeURIComponent(grade)}`)
+    .then(response => response.json())
+    .then(data => {
+        const select = document.getElementById('class-select');
+        if (!select) {
+            return;
+        }
+        select.innerHTML = '<option value="">请选择班级</option>';
+        (data.classes || []).forEach(className => {
+            const option = document.createElement('option');
+            option.value = className;
+            option.textContent = className;
+            select.appendChild(option);
+        });
+    })
+    .catch(error => {
+        console.error('Failed to load classes:', error);
     });
 }
 
