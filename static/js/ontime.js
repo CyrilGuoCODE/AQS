@@ -52,6 +52,34 @@ class QueueManager {
         return this.queue.filter(item => item.status === 'waiting').slice(0, 3);
     }
 
+    ensureCurrentParent() {
+        if (this.queue.length === 0) {
+            return null;
+        }
+
+        const existingCurrent = this.getCurrentParent();
+        if (existingCurrent) {
+            return existingCurrent;
+        }
+
+        let promoteIndex = this.queue.findIndex(item => item.status === 'waiting');
+        if (promoteIndex === -1) {
+            promoteIndex = 0;
+        }
+
+        this.queue = this.queue.map((item, index) => {
+            if (index === promoteIndex) {
+                return { ...item, status: 'current' };
+            }
+            if (item.status === 'current') {
+                return { ...item, status: 'waiting' };
+            }
+            return item;
+        });
+
+        return this.queue[promoteIndex];
+    }
+
     renderCurrentParent(currentParent) {
         if (currentParent) {
             this.elements.currentParentCard.innerHTML = `
@@ -93,7 +121,7 @@ class QueueManager {
     }
 
     render() {
-        const currentParent = this.getCurrentParent();
+        const currentParent = this.ensureCurrentParent();
         const waitingParents = this.getWaitingParents();
 
         if (this.queue.length === 0) {
