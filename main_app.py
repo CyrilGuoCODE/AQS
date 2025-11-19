@@ -16,10 +16,10 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 app.config['PARENT_KEY'] = 'parent'
-app.config['TEACHER_KEY'] = 'teacher'
+app.config['TEACHER_KEY'] = 'teacher123321'
 
-APPOINTMENT_START_TIME = datetime(2025, 11, 16, 19, 0, 0)
-CONVERSION_START_TIME = "2025-11-16T17:00:00"
+APPOINTMENT_START_TIME = datetime(2025, 11, 20, 8, 0, 0)
+CONVERSION_START_TIME = "2025-11-21T17:00:00"
 ENABLE_TIME_CHECK = True
 
 # 初始化速率限制器
@@ -278,7 +278,7 @@ def list():
         data = []
     else:
         data = data['queue']
-    return render_template('list.html', t_queue=data, t_start_time=APPOINTMENT_START_TIME)
+    return render_template('list.html', t_queue=data, t_start_time=CONVERSION_START_TIME)
 
 
 @app.route('/teacher/setting')
@@ -401,14 +401,14 @@ def list_download():
         status = item.get('status', 'waiting')
         appointment_time = item.get('appointmentTime', item.get('appointment_time'))
         if not appointment_time:
-            appointment_datetime = APPOINTMENT_START_TIME + timedelta(minutes=(index-1) * 10)
+            appointment_datetime = datetime.strptime(CONVERSION_START_TIME, "%Y-%m-%dT%H:%M:%S") + timedelta(minutes=(index-1) * 10)
             appointment_time = appointment_datetime.strftime('%H:%M')
         status_text = status_text_map.get(status, '未知')
 
         data_list.append({
             '序号': index,
             '学生姓名': full_name,
-            '预约时间': appointment_time,
+            '预计时间': appointment_time,
             '状态': status_text
         })
     
