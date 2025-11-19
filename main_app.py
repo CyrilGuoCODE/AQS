@@ -180,13 +180,22 @@ def dele(id, name):
     i = 0
     while data['queue'][i]['name'] != name:
         i += 1
+    # 获取被删除元素的预约类型
+    removed_type = data['queue'][i].get('type', '未知')
     i += 1
     while i < len(data['queue']):
         data1 = db.parent.find_one({'name': data['queue'][i]['name']})
-        for j in data1['appointment']:
-            if j['teacher_id'] == int(id):
-                j['ranking'] -= 1
-        db.parent.update_one({'name': data['queue'][i]['name']}, {'$set': {'appointment': data1['appointment']}})
+        # 根据预约类型查找相应数据
+        if data['queue'][i].get('type') == '自主预约':
+            for j in data1.get('appointment', []):
+                if j['teacher_id'] == int(id):
+                    j['ranking'] -= 1
+            db.parent.update_one({'name': data['queue'][i]['name']}, {'$set': {'appointment': data1.get('appointment', [])}})
+        elif data['queue'][i].get('type') == '指定预约':
+            for j in data1.get('must', []):
+                if j['teacher_id'] == int(id):
+                    j['ranking'] -= 1
+            db.parent.update_one({'name': data['queue'][i]['name']}, {'$set': {'must': data1.get('must', [])}})
         i += 1
     db.teacher.update_one({'id': id}, {'$pull': {'queue': {'name': name}}})
 
@@ -221,7 +230,7 @@ def save():
         appointments = []
         for i in new_appointments:
             appointments.append({'teacher_id': i, 'ranking': setting_memory[str(i)]['peoples']})
-            db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting'}}})
+            db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting', 'type': '自主预约'}}})
             setting_memory[str(i)]['peoples'] += 1
         db.parent.insert_one({'name': session['id'], 'appointment': appointments, 'must': []})
     else:
@@ -234,7 +243,7 @@ def save():
         for i in new_appointments:
             if i not in old_appointments:
                 appointments.append({'teacher_id': i, 'ranking': setting_memory[str(i)]['peoples']})
-                db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting'}}})
+                db.teacher.update_one({'id': str(i)}, {'$push': {'queue': {'name': session['id'], 'status': 'waiting', 'type': '自主预约'}}})
                 setting_memory[str(i)]['peoples'] += 1
         data['appointment'] = appointments
         db.parent.update_one({'name': session['id']}, {'$set': data})
@@ -289,14 +298,59 @@ def add(name, id):
     else:
         db.parent.insert_one({'name': name, 'appointment': [], 'must': [{'teacher_id': id, 'ranking': setting_memory[str(id)]['peoples']}]})
     setting_memory[str(id)]['peoples'] += 1
-    db.teacher.update_one({'id': str(id)}, {'$push': {'queue': {'name': name, 'status': 'waiting'}}})
+    db.teacher.update_one({'id': str(id)}, {'$push': {'queue': {'name': name, 'status': 'waiting', 'type': '指定预约'}}})
 
 def delete(name, id):
-    data = db.parent.find_one({'name': name})
-    if data != None:
-        db.parent.update_one({'name': name}, {'$pull': {'must': {'teacher_id': id}}})
-        setting_memory[str(id)]['peoples'] -= 1
+    # 获取teacher数据
+    teacher_data = db.teacher.find_one({'id': str(id)})
+    if teacher_data is None:
+        return
+    
+    # 找到要删除的queue项及其预约类型
+    queue_item = None
+    queue_index = -1
+    for i, item in enumerate(teacher_data.get('queue', [])):
+        if item.get('name') == name:
+            queue_item = item
+            queue_index = i
+            break
+    
+    if queue_item is None:
+        return
+    
+    # 获取预约类型
+    appointment_type = queue_item.get('type', '未知')
+    
+    # 从parent数据库中删除相应记录
+    parent_data = db.parent.find_one({'name': name})
+    if parent_data is not None:
+        if appointment_type == '自主预约':
+            db.parent.update_one({'name': name}, {'$pull': {'appointment': {'teacher_id': int(id)}}})
+        elif appointment_type == '指定预约':
+            db.parent.update_one({'name': name}, {'$pull': {'must': {'teacher_id': int(id)}}})
+    
+    # 更新后续队列项的时间显示
+    queue = teacher_data.get('queue', [])
+    for i in range(queue_index + 1, len(queue)):
+        current_item = queue[i]
+        # 更新parent数据库中的ranking
+        parent_name = current_item.get('name')
+        parent_data = db.parent.find_one({'name': parent_name})
+        if parent_data is not None:
+            if current_item.get('type') == '自主预约':
+                for j in parent_data.get('appointment', []):
+                    if j['teacher_id'] == int(id):
+                        j['ranking'] -= 1
+                db.parent.update_one({'name': parent_name}, {'$set': {'appointment': parent_data.get('appointment', [])}})
+            elif current_item.get('type') == '指定预约':
+                for j in parent_data.get('must', []):
+                    if j['teacher_id'] == int(id):
+                        j['ranking'] -= 1
+                db.parent.update_one({'name': parent_name}, {'$set': {'must': parent_data.get('must', [])}})
+    
+    # 从teacher数据库中删除queue项
     db.teacher.update_one({'id': str(id)}, {'$pull': {'queue': {'name': name}}})
+    setting_memory[str(id)]['peoples'] -= 1
 
 
 @app.route('/teacher/setting/save', methods=['POST'])
@@ -350,7 +404,7 @@ def list_download():
             appointment_datetime = APPOINTMENT_START_TIME + timedelta(minutes=(index-1) * 10)
             appointment_time = appointment_datetime.strftime('%H:%M')
         status_text = status_text_map.get(status, '未知')
-        
+
         data_list.append({
             '序号': index,
             '学生姓名': full_name,
