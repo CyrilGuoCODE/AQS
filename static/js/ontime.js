@@ -3,6 +3,10 @@ class QueueManager {
         this.queue = Array.isArray(initialQueue) ? [...initialQueue] : [];
         this.teacherId = teacherId;
         this.socket = null;
+        this.pendingConfirmTimer = null;
+        this.pendingParentId = null;
+        this.skipUntilQueueUpdate = false;
+        this.confirmDelay = 2000;
         this.initSocket();
         this.initElements();
         this.bindEvents();
@@ -19,8 +23,14 @@ class QueueManager {
         this.socket.on('queue_updated', (data) => {
             if (data.queue) {
                 this.queue = data.queue;
+                this.skipUntilQueueUpdate = false;
+                this.resetPendingConfirm();
                 this.render();
             }
+        });
+
+        this.socket.on('promote_rejected', () => {
+            this.handlePromotionRejected();
         });
 
         this.socket.on('error', (error) => {
@@ -52,32 +62,71 @@ class QueueManager {
         return this.queue.filter(item => item.status === 'waiting').slice(0, 3);
     }
 
-    ensureCurrentParent() {
+    resetPendingConfirm() {
+        if (this.pendingConfirmTimer) {
+            clearTimeout(this.pendingConfirmTimer);
+            this.pendingConfirmTimer = null;
+        }
+        this.pendingParentId = null;
+    }
+
+    promoteFirstWaiting() {
         if (this.queue.length === 0) {
             return null;
         }
 
-        const existingCurrent = this.getCurrentParent();
-        if (existingCurrent) {
-            return existingCurrent;
+        const waitingIndex = this.queue.findIndex(item => item.status === 'waiting');
+        if (waitingIndex === -1) {
+            return null;
         }
 
-        let promoteIndex = this.queue.findIndex(item => item.status === 'waiting');
-        if (promoteIndex === -1) {
-            promoteIndex = 0;
-        }
-
+        let promotedParent = null;
         this.queue = this.queue.map((item, index) => {
-            if (index === promoteIndex) {
-                return { ...item, status: 'current' };
-            }
             if (item.status === 'current') {
                 return { ...item, status: 'waiting' };
+            }
+            if (index === waitingIndex) {
+                promotedParent = { ...item, status: 'current' };
+                return promotedParent;
             }
             return item;
         });
 
-        return this.queue[promoteIndex];
+        return promotedParent;
+    }
+
+    requestPromoteConfirm(promotedParent) {
+        if (!promotedParent || !this.socket) {
+            return;
+        }
+        this.resetPendingConfirm();
+        this.pendingParentId = promotedParent.id || promotedParent._id || null;
+        this.pendingConfirmTimer = setTimeout(() => {
+            if (this.socket.connected) {
+                this.socket.emit('promote_first_waiting', {
+                    teacherId: this.teacherId,
+                    parentId: this.pendingParentId
+                });
+            } else {
+                console.warn('Socket 未连接，无法通知后端确认');
+            }
+            this.pendingConfirmTimer = null;
+        }, this.confirmDelay);
+    }
+
+    handlePromotionRejected() {
+        if (this.pendingParentId) {
+            this.queue = this.queue.map((item) => {
+                const itemId = item.id || item._id;
+                if (itemId === this.pendingParentId) {
+                    return { ...item, status: 'waiting' };
+                }
+                return item;
+            });
+        }
+        this.skipUntilQueueUpdate = true;
+        this.resetPendingConfirm();
+        this.render();
     }
 
     renderCurrentParent(currentParent) {
@@ -121,7 +170,16 @@ class QueueManager {
     }
 
     render() {
-        const currentParent = this.ensureCurrentParent();
+        let currentParent = this.getCurrentParent();
+
+        if (!currentParent && !this.skipUntilQueueUpdate) {
+            const promotedParent = this.promoteFirstWaiting();
+            if (promotedParent) {
+                currentParent = promotedParent;
+                this.requestPromoteConfirm(promotedParent);
+            }
+        }
+
         const waitingParents = this.getWaitingParents();
 
         if (this.queue.length === 0) {
