@@ -1,5 +1,6 @@
 let reservedStudents = [];
 let maxParents = 10;
+const defaultGrade = '初一';
 
 function loadSettings() {
     if (typeof initialMaxParents !== 'undefined') {
@@ -104,8 +105,30 @@ function saveSettings() {
     });
 }
 
+function loadClasses(grade = defaultGrade) {
+    const select = document.getElementById('class-select');
+    if (!select) {
+        return;
+    }
+    fetch(`/get_classes?grade=${encodeURIComponent(grade)}`)
+        .then(response => response.json())
+        .then(data => {
+            select.innerHTML = '<option value="">请选择班级</option>';
+            (data.classes || []).forEach(className => {
+                const option = document.createElement('option');
+                option.value = className;
+                option.textContent = className;
+                select.appendChild(option);
+            });
+        })
+        .catch(() => {
+            select.innerHTML = '<option value="">请选择班级</option>';
+        });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadSettings();
+    loadClasses();
     
     document.getElementById('add-parent-btn').addEventListener('click', addReservedParent);
     

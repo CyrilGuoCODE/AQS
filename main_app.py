@@ -110,8 +110,8 @@ def get_teachers():
 
 @app.route('/get_classes')
 def get_classes():
-    if not session.get('parent_verified'):
-        return redirect('/login')
+    if not (session.get('parent_verified') or session.get('teacher_verified')):
+        return jsonify({'success': False, 'message': '未授权'}), 401
     grade = request.args.get('grade', '初一')
     return jsonify({'grade': grade, 'classes': classes_data.get(grade, [])})
 
