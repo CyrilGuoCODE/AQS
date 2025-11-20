@@ -17,10 +17,13 @@ class QueueManager {
         this.socket = io();
         
         this.socket.on('connect', () => {
-            console.log('Socket connected');
+            this.socket.emit('join_teacher_room', { teacherId: this.teacherId });
         });
 
-        this.socket.on('queue_updated', (data) => {
+        this.socket.on('queue_update', (data) => {
+            if (!data || data.teacherId !== this.teacherId) {
+                return;
+            }
             if (data.queue) {
                 this.queue = data.queue;
                 this.skipUntilQueueUpdate = false;
@@ -29,7 +32,10 @@ class QueueManager {
             }
         });
 
-        this.socket.on('promote_rejected', () => {
+        this.socket.on('promote_rejected', (data = {}) => {
+            if (data.teacherId && data.teacherId !== this.teacherId) {
+                return;
+            }
             this.handlePromotionRejected();
         });
 
@@ -103,9 +109,11 @@ class QueueManager {
         this.pendingParentId = promotedParent.id || promotedParent._id || null;
         this.pendingConfirmTimer = setTimeout(() => {
             if (this.socket.connected) {
+                const parentName = promotedParent.name || promotedParent.parentName || '';
                 this.socket.emit('promote_first_waiting', {
                     teacherId: this.teacherId,
-                    parentId: this.pendingParentId
+                    parentId: this.pendingParentId,
+                    parentName
                 });
             } else {
                 console.warn('Socket 未连接，无法通知后端确认');
@@ -204,7 +212,8 @@ class QueueManager {
         if (this.socket && this.socket.connected) {
             this.socket.emit('complete_parent', {
                 teacherId: this.teacherId,
-                parentId: currentParent.id || currentParent._id
+                parentId: currentParent.id || currentParent._id,
+                parentName: currentParent.name || currentParent.parentName || ''
             });
         } else {
             console.error('Socket 未连接');
@@ -220,7 +229,8 @@ class QueueManager {
         if (this.socket && this.socket.connected) {
             this.socket.emit('skip_parent', {
                 teacherId: this.teacherId,
-                parentId: currentParent.id || currentParent._id
+                parentId: currentParent.id || currentParent._id,
+                parentName: currentParent.name || currentParent.parentName || ''
             });
         } else {
             console.error('Socket 未连接');

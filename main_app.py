@@ -353,6 +353,50 @@ def delete(name, id):
     setting_memory[str(id)]['peoples'] -= 1
 
 
+def match_queue_item(item, parent_id=None, parent_name=None):
+    if parent_id:
+        item_id = item.get('id') or item.get('_id')
+        if item_id and str(item_id) == str(parent_id):
+            return True
+    if parent_name and item.get('name') == parent_name:
+        return True
+    return False
+
+
+def ensure_current_parent(queue):
+    has_current = any(item.get('status') == 'current' for item in queue)
+    if has_current:
+        return queue
+    for item in queue:
+        if item.get('status') == 'waiting':
+            item['status'] = 'current'
+            break
+    return queue
+
+
+def update_setting_memory_count(teacher_id, queue):
+    teacher_id = str(teacher_id)
+    active_count = len([item for item in queue if item.get('status') != 'completed'])
+    if teacher_id not in setting_memory:
+        setting_memory[teacher_id] = {'maxParents': 10, 'peoples': active_count}
+    else:
+        setting_memory[teacher_id]['peoples'] = active_count
+
+
+def emit_queue_update(teacher_id, queue=None, room=None):
+    teacher_id = str(teacher_id)
+    if queue is None:
+        teacher_data = db.teacher.find_one({'id': teacher_id})
+        queue = teacher_data.get('queue', []) if teacher_data else []
+    update_setting_memory_count(teacher_id, queue)
+    payload = {'teacherId': teacher_id, 'queue': queue}
+    target_room = room or f'teacher_{teacher_id}'
+    socketio.emit('queue_update', payload, room=target_room)
+
+def save_queue(teacher_id, queue):
+    db.teacher.update_one({'id': str(teacher_id)}, {'$set': {'queue': queue}})
+    emit_queue_update(teacher_id, queue)
+
 @app.route('/teacher/setting/save', methods=['POST'])
 def setting_save():
     if not session.get('teacher_verified'):
@@ -374,6 +418,95 @@ def setting_save():
     return jsonify({'success': True})
 
 
+@socketio.on('join_teacher_room')
+def handle_join_teacher_room(data):
+    teacher_id = str(data.get('teacherId', '')).strip()
+    if not teacher_id:
+        return
+    room_name = f'teacher_{teacher_id}'
+    join_room(room_name)
+    emit_queue_update(teacher_id, room=request.sid)
+
+
+def complete_current_and_promote(queue):
+    updated = False
+    for item in queue:
+        if item.get('status') == 'current':
+            item['status'] = 'completed'
+            updated = True
+            break
+    if updated:
+        ensure_current_parent(queue)
+    return queue, updated
+
+
+@socketio.on('complete_parent')
+def handle_complete_parent(data):
+    teacher_id = str(data.get('teacherId', '')).strip()
+    if not teacher_id:
+        return
+    teacher_data = db.teacher.find_one({'id': teacher_id})
+    if not teacher_data:
+        return
+    queue = teacher_data.get('queue', [])
+    queue, updated = complete_current_and_promote(queue)
+    if updated:
+        save_queue(teacher_id, queue)
+    else:
+        emit_queue_update(teacher_id, queue)
+
+
+@socketio.on('skip_parent')
+def handle_skip_parent(data):
+    teacher_id = str(data.get('teacherId', '')).strip()
+    parent_id = data.get('parentId')
+    parent_name = data.get('parentName')
+    if not teacher_id:
+        return
+    teacher_data = db.teacher.find_one({'id': teacher_id})
+    if not teacher_data:
+        return
+    queue = teacher_data.get('queue', [])
+    current_index = None
+    for idx, item in enumerate(queue):
+        if item.get('status') == 'current' and (match_queue_item(item, parent_id, parent_name) or current_index is None):
+            current_index = idx
+            if match_queue_item(item, parent_id, parent_name):
+                break
+    if current_index is None:
+        return
+    current_item = queue.pop(current_index)
+    current_item['status'] = 'waiting'
+    queue.append(current_item)
+    ensure_current_parent(queue)
+    save_queue(teacher_id, queue)
+
+
+@socketio.on('promote_first_waiting')
+def handle_promote_first_waiting(data):
+    teacher_id = str(data.get('teacherId', '')).strip()
+    parent_id = data.get('parentId')
+    parent_name = data.get('parentName')
+    if not teacher_id:
+        return
+    teacher_data = db.teacher.find_one({'id': teacher_id})
+    if not teacher_data:
+        socketio.emit('promote_rejected', {'teacherId': teacher_id}, room=f'teacher_{teacher_id}')
+        return
+    queue = teacher_data.get('queue', [])
+    target_index = None
+    for idx, item in enumerate(queue):
+        if match_queue_item(item, parent_id, parent_name):
+            target_index = idx
+            break
+    if target_index is None:
+        socketio.emit('promote_rejected', {'teacherId': teacher_id}, room=f'teacher_{teacher_id}')
+        return
+    for item in queue:
+        if item.get('status') == 'current':
+            item['status'] = 'waiting'
+    queue[target_index]['status'] = 'current'
+    save_queue(teacher_id, queue)
 @app.route('/teacher/list/download')
 def list_download():
     if not session.get('teacher_verified'):
