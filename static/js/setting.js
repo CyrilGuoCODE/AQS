@@ -1,6 +1,5 @@
 let reservedStudents = [];
 let maxParents = 10;
-const defaultGrade = '初一';
 
 function loadSettings() {
     if (typeof initialMaxParents !== 'undefined') {
@@ -105,12 +104,12 @@ function saveSettings() {
     });
 }
 
-function loadClasses(grade = defaultGrade) {
+function loadClasses() {
     const select = document.getElementById('class-select');
     if (!select) {
         return;
     }
-    fetch(`/get_classes?grade=${encodeURIComponent(grade)}`)
+    fetch(`/get_classes`)
         .then(response => response.json())
         .then(data => {
             select.innerHTML = '<option value="">请选择班级</option>';

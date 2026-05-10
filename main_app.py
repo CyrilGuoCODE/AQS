@@ -60,10 +60,10 @@ client = pymongo.MongoClient(mongodb_uri)
 db = client['aqs']
 
 with open('teacher.json', 'r', encoding='utf-8') as f:
-    teachers = json.load(f)
+    teachers = json.load(f)[config['common_settings']['grade']]
 
 with open('class.json', 'r', encoding='utf-8') as f:
-    classes_data = json.load(f)
+    classes_data = json.load(f)[config['common_settings']['grade']]
 
 with open('notice.txt', 'r', encoding='utf-8') as file:
     notice = file.readlines()
@@ -120,8 +120,7 @@ def get_teachers():
 def get_classes():
     if not (session.get('parent_verified') or session.get('teacher_verified')):
         return jsonify({'success': False, 'message': '未授权'}), 401
-    grade = request.args.get('grade', '初一')
-    return jsonify({'grade': grade, 'classes': classes_data.get(grade, [])})
+    return jsonify({'classes': classes_data})
 
 @app.route('/handle', methods=['POST'])
 @limiter.limit('10 per hour')

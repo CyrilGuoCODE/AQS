@@ -4,11 +4,14 @@
         "teacher_key": "teacher123321"
     },
     "time_settings": {
-        "appointment_start_time": "2026-05-9 20:00:00",
+        "appointment_start_time": "2026-05-09 20:00:00",
         "appointment_end_time": "2026-05-12 10:00:00",
         "conversion_start_time": "2026-05-13T16:45:00",
         "enable_time_check": true,
-        "meeting_duration_minutes": 10
+        "meeting_duration_minutes": 5
+    },
+    "common_settings": {
+        "grade": "初二"
     },
     "teacher_settings": {
         "default_max_parents": 4

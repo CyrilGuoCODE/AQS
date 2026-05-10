@@ -84,7 +84,7 @@ function showParentForm() {
     
     submitBtn.addEventListener('click', submitStudentName);
     nameInput.focus();
-    loadClasses('初二');
+    loadClasses();
 }
 
 function showTeacherForm() {
@@ -162,8 +162,8 @@ function loadTeachers() {
     });
 }
 
-function loadClasses(grade) {
-    fetch(`/get_classes?grade=${encodeURIComponent(grade)}`)
+function loadClasses() {
+    fetch(`/get_classes`)
     .then(response => response.json())
     .then(data => {
         const select = document.getElementById('class-select');
