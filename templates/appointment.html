@@ -54,6 +54,8 @@
         const startTime = '{{ t_start_time }}'
         const mustAppointments = {{ t_must | tojson | safe }}
         const previousAppointments = {{ t_appointment | tojson | safe }}
+        const meetingDuration = {{ t_meeting_duration | tojson | safe }}
+        const maxSelectable = {{ t_max_selectable | tojson | safe }}
     </script>
     <script src="{{ url_for('static', filename='js/appointment.js') }}"></script>
 </body>

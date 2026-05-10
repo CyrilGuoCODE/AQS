@@ -15,12 +15,20 @@ from datetime import datetime, timedelta
 # ==================== 初始化配置 ====================
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
-app.config['PARENT_KEY'] = 'parent'
-app.config['TEACHER_KEY'] = 'teacher123321'
 
-APPOINTMENT_START_TIME = datetime(2026, 11, 20, 8, 0, 0)
-CONVERSION_START_TIME = "2025-11-21T16:45:00"
-ENABLE_TIME_CHECK = True
+with open('config.json', 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
+app.config['PARENT_KEY'] = config['keys']['parent_key']
+app.config['TEACHER_KEY'] = config['keys']['teacher_key']
+
+APPOINTMENT_START_TIME = datetime.strptime(config['time_settings']['appointment_start_time'], '%Y-%m-%d %H:%M:%S')
+APPOINTMENT_END_TIME = datetime.strptime(config['time_settings']['appointment_end_time'], '%Y-%m-%d %H:%M:%S')
+CONVERSION_START_TIME = config['time_settings']['conversion_start_time']
+ENABLE_TIME_CHECK = config['time_settings']['enable_time_check']
+MEETING_DURATION_MINUTES = config['time_settings']['meeting_duration_minutes']
+DEFAULT_MAX_PARENTS = config['teacher_settings']['default_max_parents']
+MAX_SELECTABLE_TEACHERS = config['parent_settings']['max_selectable_teachers']
 
 # 初始化速率限制器
 def get_real_ip():
@@ -64,8 +72,8 @@ setting_memory = {}
 for i in teachers:
     data = db.teacher.find_one({'id': str(i['id'])})
     if data == None:
-        db.teacher.insert_one({'id': str(i['id']), 'maxParents': 10, 'reservedStudents': [], 'queue': []})
-        setting_memory[str(i['id'])] = {'maxParents': 10, 'peoples': 0}
+        db.teacher.insert_one({'id': str(i['id']), 'maxParents': DEFAULT_MAX_PARENTS, 'reservedStudents': [], 'queue': []})
+        setting_memory[str(i['id'])] = {'maxParents': DEFAULT_MAX_PARENTS, 'peoples': 0}
     else:
         setting_memory[str(i['id'])] = {'maxParents': data['maxParents'], 'peoples': len(data['queue'])}
 
@@ -151,7 +159,7 @@ def parent():
         appointments = data['appointment']
         must = data['must']
     
-    return render_template('parent.html', t_name=session['name'], t_appointment=appointments, t_must=must, t_setting=setting_memory, t_start_time=CONVERSION_START_TIME, t_teachers=teachers)
+    return render_template('parent.html', t_name=session['name'], t_appointment=appointments, t_must=must, t_setting=setting_memory, t_start_time=CONVERSION_START_TIME, t_teachers=teachers, t_meeting_duration=MEETING_DURATION_MINUTES)
 
 
 @app.route('/parent/appointment')
@@ -162,7 +170,9 @@ def appointment():
     if ENABLE_TIME_CHECK:
         current_time = datetime.now()
         if current_time < APPOINTMENT_START_TIME:
-            return render_template('appointment_not_available.html', t_start_time=APPOINTMENT_START_TIME.strftime('%Y-%m-%d %H:%M:%S'))
+            return render_template('appointment_not_available.html', t_title='预约未开始', t_start_time=APPOINTMENT_START_TIME.strftime('%Y-%m-%d %H:%M:%S'), t_end_time=APPOINTMENT_END_TIME.strftime('%Y-%m-%d %H:%M:%S'))
+        if current_time > APPOINTMENT_END_TIME:
+            return render_template('appointment_not_available.html', t_title='预约已结束', t_start_time=APPOINTMENT_START_TIME.strftime('%Y-%m-%d %H:%M:%S'), t_end_time=APPOINTMENT_END_TIME.strftime('%Y-%m-%d %H:%M:%S'))
     
     data = db.parent.find_one({'name': session['id']})
     if data == None:
@@ -172,7 +182,7 @@ def appointment():
         appointment = data['appointment']
         must = data['must']
     
-    return render_template('appointment.html', t_name=session['name'], t_className=session['className'], t_teacher=teachers, t_notice=notice, t_appointment=appointment, t_must=must, t_setting=setting_memory, t_start_time=CONVERSION_START_TIME)
+    return render_template('appointment.html', t_name=session['name'], t_className=session['className'], t_teacher=teachers, t_notice=notice, t_appointment=appointment, t_must=must, t_setting=setting_memory, t_start_time=CONVERSION_START_TIME, t_meeting_duration=MEETING_DURATION_MINUTES, t_max_selectable=MAX_SELECTABLE_TEACHERS)
 
 
 def dele(id, name):
@@ -209,6 +219,8 @@ def save():
         current_time = datetime.now()
         if current_time < APPOINTMENT_START_TIME:
             return jsonify({'success': False, 'message': f'预约尚未开放，开放时间为：{APPOINTMENT_START_TIME.strftime("%Y-%m-%d %H:%M:%S")}'})
+        if current_time > APPOINTMENT_END_TIME:
+            return jsonify({'success': False, 'message': f'预约已截止，截止时间为：{APPOINTMENT_END_TIME.strftime("%Y-%m-%d %H:%M:%S")}'})
     
     data = db.parent.find_one({'name': session['id']})
     old_appointments = []
@@ -221,7 +233,7 @@ def save():
         if teacher_id not in old_appointments:
             teacher_setting = setting_memory.get(str(teacher_id), {})
             current_peoples = teacher_setting.get('peoples', 0)
-            max_parents = teacher_setting.get('maxParents', 10)
+            max_parents = teacher_setting.get('maxParents', DEFAULT_MAX_PARENTS)
             
             if current_peoples >= max_parents:
                 return jsonify({'success': False, 'message': f'老师{teacher_id}的预约人数已满，无法预约'})
@@ -286,7 +298,7 @@ def setting():
     if not session.get('teacher_verified'):
         return redirect('/login')
     data = db.teacher.find_one({'id': session['id']})
-    maxParents = data['maxParents'] if data != None else 10
+    maxParents = data['maxParents'] if data != None else DEFAULT_MAX_PARENTS
     reservedStudents = data['reservedStudents'] if data != None else []
     return render_template('setting.html', t_maxParents=maxParents, t_reservedStudents=reservedStudents)
 
@@ -378,7 +390,7 @@ def update_setting_memory_count(teacher_id, queue):
     teacher_id = str(teacher_id)
     active_count = len([item for item in queue if item.get('status') != 'completed'])
     if teacher_id not in setting_memory:
-        setting_memory[teacher_id] = {'maxParents': 10, 'peoples': active_count}
+        setting_memory[teacher_id] = {'maxParents': DEFAULT_MAX_PARENTS, 'peoples': active_count}
     else:
         setting_memory[teacher_id]['peoples'] = active_count
 
@@ -534,7 +546,7 @@ def list_download():
         status = item.get('status', 'waiting')
         appointment_time = item.get('appointmentTime', item.get('appointment_time'))
         if not appointment_time:
-            appointment_datetime = datetime.strptime(CONVERSION_START_TIME, "%Y-%m-%dT%H:%M:%S") + timedelta(minutes=(index-1) * 10)
+            appointment_datetime = datetime.strptime(CONVERSION_START_TIME, "%Y-%m-%dT%H:%M:%S") + timedelta(minutes=(index-1) * MEETING_DURATION_MINUTES)
             appointment_time = appointment_datetime.strftime('%H:%M')
         status_text = status_text_map.get(status, '未知')
 

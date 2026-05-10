@@ -12,9 +12,11 @@
     <div id="app">
         <div class="container">
             <div style="text-align: center; padding: 60px 20px;">
-                <h2 style="color: #ff4d4f; margin-bottom: 30px;">预约已结束</h2>
-                <p style="font-size: 18px; color: #666; margin-bottom: 20px;">预约功能已于以下时间结束：</p>
-                <p style="font-size: 24px; color: #1890ff; font-weight: bold; margin-bottom: 40px;">2025-11-20 20:00:00</p>
+                <h2 style="color: #ff4d4f; margin-bottom: 30px;">{{ t_title }}</h2>
+                <p style="font-size: 18px; color: #666; margin-bottom: 20px;">预约开放时间为：</p>
+                <p style="font-size: 24px; color: #1890ff; font-weight: bold; margin-bottom: 20px;">{{ t_start_time }}</p>
+                <p style="font-size: 18px; color: #666; margin-bottom: 20px;">预约截止时间为：</p>
+                <p style="font-size: 24px; color: #1890ff; font-weight: bold; margin-bottom: 40px;">{{ t_end_time }}</p>
                 <a href="/parent" id="back-btn" class="button-primary">返回</a>
             </div>
         </div>

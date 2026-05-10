@@ -84,7 +84,7 @@ function showParentForm() {
     
     submitBtn.addEventListener('click', submitStudentName);
     nameInput.focus();
-    loadClasses('初一');
+    loadClasses('初二');
 }
 
 function showTeacherForm() {

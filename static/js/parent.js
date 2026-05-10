@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     allTeachers.forEach(teacher => {
         const waitingCount = teacher.ranking || 0;
         const totalWaiting = waitingCount;
-        const estimatedTime = new Date(appointmentStartTime.getTime() + totalWaiting * 10 * 60000);
+        const estimatedTime = new Date(appointmentStartTime.getTime() + totalWaiting * meetingDuration * 60000);
         const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
         
         const waitingElement = document.querySelector(`[data-waiting="${teacher.teacher_id}"]`);

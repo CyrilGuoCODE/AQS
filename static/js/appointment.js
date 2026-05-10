@@ -82,7 +82,7 @@ function renderTeachers() {
         if (isMust) currentPeoples = mustAppointments.find(t => t.teacher_id === teacher.id).ranking;
         const isFull = currentPeoples >= maxParents;
         const appointmentStartTime = new Date(startTime);
-        const estimatedTime = new Date(appointmentStartTime.getTime() + currentPeoples * 10 * 60000);
+        const estimatedTime = new Date(appointmentStartTime.getTime() + currentPeoples * meetingDuration * 60000);
         const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
 
         const card = document.createElement('div');
@@ -142,7 +142,7 @@ function toggleTeacher(teacher, cardElement) {
         selectedTeachers.splice(index, 1);
         cardElement.classList.remove('selected');
     } else {
-        const availableSlots = 3 - lockedTeachers.length;
+        const availableSlots = maxSelectable - lockedTeachers.length;
         const selectableCount = selectedTeachers.filter(t => lockedTeachers.find(lt => lt.id === t.id) === undefined).length;
         
         if (selectableCount >= availableSlots) {
@@ -159,7 +159,7 @@ function toggleTeacher(teacher, cardElement) {
 function updateSelectedCount() {
     const count = selectedTeachers.length;
     const mustCount = lockedTeachers.length;
-    const availableSlots = 3 - mustCount;
+    const availableSlots = maxSelectable - mustCount;
     const selectableCount = selectedTeachers.filter(t => lockedTeachers.find(lt => lt.id === t.id) === undefined).length;
     const remainingSlots = availableSlots - selectableCount;
     
@@ -188,7 +188,7 @@ function submitAppointment() {
         if (!isMust && test.find(t => t.id === teacher.id)) waitingCount = previousAppointments.find(t => t.teacher_id === teacher.id).ranking;
         if (isMust) waitingCount = mustAppointments.find(t => t.teacher_id === teacher.id).ranking;
         const totalWaiting = waitingCount;
-        const estimatedTime = new Date(appointmentStartTime.getTime() + totalWaiting * 10 * 60000);
+        const estimatedTime = new Date(appointmentStartTime.getTime() + totalWaiting * meetingDuration * 60000);
         const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
 
         const scheduleItem = document.createElement('div');

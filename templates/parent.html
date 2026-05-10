@@ -69,6 +69,7 @@
         const appointmentTeachers = {{ t_appointment | tojson | safe }};
         const setting = {{ t_setting | tojson | safe }};
         const startTime = '{{ t_start_time }}';
+        const meetingDuration = {{ t_meeting_duration | tojson | safe }};
     </script>
     <script src="{{ url_for('static', filename='js/parent.js') }}"></script>
 </body>
