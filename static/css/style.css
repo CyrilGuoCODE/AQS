@@ -658,15 +658,15 @@ label {
     .logout-btn {
         top: 10px;
         right: 10px;
-        padding: 8px 16px;
-        font-size: 14px;
+        padding: 12px 20px;
+        font-size: 16px;
     }
 
     .back-btn {
         top: 10px;
         left: 10px;
-        padding: 8px 16px;
-        font-size: 14px;
+        padding: 12px 20px;
+        font-size: 16px;
     }
 
     #app {
@@ -868,15 +868,15 @@ label {
     .logout-btn {
         top: 5px;
         right: 5px;
-        padding: 6px 12px;
-        font-size: 12px;
+        padding: 10px 16px;
+        font-size: 14px;
     }
 
     .back-btn {
         top: 5px;
         left: 5px;
-        padding: 6px 12px;
-        font-size: 12px;
+        padding: 10px 16px;
+        font-size: 14px;
     }
 
     #app {
