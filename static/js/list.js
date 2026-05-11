@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let appointmentTime = item.appointmentTime || item.appointment_time;
             if (!appointmentTime && typeof t_start_time !== 'undefined') {
                 const appointmentStartTime = new Date(t_start_time);
-                const estimatedTime = new Date(appointmentStartTime.getTime() + index * 10 * 60000);
+                const estimatedTime = new Date(appointmentStartTime.getTime() + index * meetingDuration * 60000);
                 appointmentTime = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
             }
             appointmentTime = appointmentTime || '-';

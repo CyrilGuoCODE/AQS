@@ -4,7 +4,7 @@
         "teacher_key": "teacher123321"
     },
     "time_settings": {
-        "appointment_start_time": "2026-05-09 20:00:00",
+        "appointment_start_time": "2026-05-11 20:00:00",
         "appointment_end_time": "2026-05-12 10:00:00",
         "conversion_start_time": "2026-05-13T16:45:00",
         "enable_time_check": true,

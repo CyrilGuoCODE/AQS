@@ -289,7 +289,7 @@ def list():
         data = []
     else:
         data = data['queue']
-    return render_template('list.html', t_queue=data, t_start_time=CONVERSION_START_TIME)
+    return render_template('list.html', t_queue=data, t_start_time=CONVERSION_START_TIME, t_meeting_duration=MEETING_DURATION_MINUTES)
 
 
 @app.route('/teacher/setting')
