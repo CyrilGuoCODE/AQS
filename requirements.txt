@@ -5,6 +5,4 @@ python-socketio==4.6.0
 python-engineio==3.13.2
 eventlet
 flask-limiter
-pymongo
-pandas
 openpyxl

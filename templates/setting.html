@@ -3,57 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家长会预约系统 - 教师设置</title>
+    <title>教师设置 - 家长会预约系统</title>
+    {% include '_theme_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
 </head>
 <body>
-    <a href="/teacher" class="back-btn">返回</a>
-    <a href="/logout" class="logout-btn">登出</a>
+    {% include '_icons.html' %}
+    <div class="page">
+        <header class="topbar">
+            <div class="topbar-title">
+                <span class="topbar-grade">{{ t_grade }}</span>
+                <h1>教师设置</h1>
+            </div>
+            <div class="topbar-actions">
+                <button class="icon-btn" data-theme-toggle type="button" aria-label="切换主题" title="切换主题">
+                    <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg>
+                    <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg>
+                </button>
+                <a href="/teacher" class="btn btn-ghost" aria-label="返回">
+                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"></use></svg><span class="btn-label">返回</span>
+                </a>
+                <a href="/logout" class="btn btn-ghost" aria-label="登出">
+                    <svg class="icon" aria-hidden="true"><use href="#i-log-out"></use></svg><span class="btn-label">登出</span>
+                </a>
+            </div>
+        </header>
 
-    <div id="app">
-        <div class="container">
-            <h1>教师设置</h1>
-            
-            <div class="setting-section">
+        <main class="card content">
+            <section class="setting-section">
                 <h3>可谈话家长数量</h3>
                 <div class="setting-item">
-                    <label for="max-parents">最大可谈话家长数量:</label>
-                    <input type="number" id="max-parents" min="1" value="{{ t_maxParents }}" class="setting-input">
-                    <p class="setting-hint">设置该老师本次家长会最多可接待的家长数量</p>
+                    <label class="field-label" for="max-parents">最大可谈话家长数量</label>
+                    <input type="number" id="max-parents" min="1" max="{{ t_maxParentsLimit }}" value="{{ t_maxParents }}"
+                           class="setting-input field-short" {% if not t_capacityEditable %}disabled{% endif %}>
+                    <p class="setting-hint">
+                        {% if t_capacityEditable %}
+                        设置该老师本次家长会最多可接待的家长数量（1-{{ t_maxParentsLimit }}）
+                        {% else %}
+                        本年级已关闭接待人数修改，当前上限为 {{ t_maxParents }} 人
+                        {% endif %}
+                    </p>
                 </div>
-            </div>
+            </section>
 
-            <div class="setting-section">
+            {% if t_allowReserved %}
+            <section class="setting-section">
                 <h3>提前预订名单</h3>
                 <div class="setting-item">
-                    <p class="setting-hint">添加需要提前预约的学生姓名</p>
-                    <div class="name-input-wrapper">
-                        <select id="class-select" class="setting-input class-select">
+                    <div class="input-row">
+                        <select id="class-select" class="setting-input class-select" aria-label="选择班级">
                             <option value="">请选择班级</option>
                         </select>
-                        <input type="text" id="parent-name-input" placeholder="请输入学生姓名" class="setting-input">
-                        <button id="add-parent-btn" class="button-primary">添加</button>
+                        <input type="text" id="parent-name-input" class="setting-input" placeholder="请输入学生姓名" autocomplete="off">
+                        <button id="add-parent-btn" class="btn btn-outline">
+                            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>添加
+                        </button>
                     </div>
+                    <p class="setting-hint">添加需要提前预约的学生姓名，最多 {{ t_maxReserved }} 人</p>
                 </div>
-                
+
                 <div class="reserved-list">
                     <h4>已添加名单</h4>
-                    <div id="reserved-list-container" class="reserved-list-container">
+                    <div id="reserved-list-container" class="reserved-items">
                         <p class="empty-hint">暂无提前预约名单</p>
                     </div>
                 </div>
-            </div>
+            </section>
+            {% endif %}
 
-            <div class="setting-actions">
-                <button id="save-settings-btn" class="button-primary submit-btn">保存设置</button>
+            <div class="page-actions">
+                <button id="save-settings-btn" class="btn btn-primary">保存设置</button>
             </div>
-        </div>
+        </main>
     </div>
-   
+
     <script>
-        const initialMaxParents = {{ t_maxParents }};
+        const initialMaxParents = {{ t_maxParents | tojson | safe }};
         const initialReservedStudents = {{ t_reservedStudents | tojson | safe }};
+        const maxParentsLimit = {{ t_maxParentsLimit | tojson | safe }};
+        const allowReservedList = {{ t_allowReserved | tojson | safe }};
+        const maxReservedStudents = {{ t_maxReserved | tojson | safe }};
     </script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/setting.js') }}"></script>
+    {% include '_footer.html' %}
 </body>
 </html>

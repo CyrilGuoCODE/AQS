@@ -1,0 +1,59 @@
+{
+    "_说明": "复制为 grades/<年级名>.json，并让 grade、config.json 的 active_grades 保持一致",
+    "grade": "示例年级",
+    "keys": {
+        "parent_key": "parent-example",
+        "teacher_key": "teacher-example"
+    },
+    "time_settings": {
+        "appointment_start_time": "2026-11-10 00:00:00",
+        "appointment_end_time": "2026-11-20 23:59:59",
+        "conversion_start_time": "2026-11-20T16:00:00",
+        "enable_time_check": false,
+        "meeting_duration_minutes": 5
+    },
+    "teacher_settings": {
+        "default_max_parents": 10,
+        "max_parents_limit": 20,
+        "allow_capacity_edit": true,
+        "allow_reserved_list": true,
+        "max_reserved_students": 100
+    },
+    "parent_settings": {
+        "max_selectable_teachers": 2,
+        "allow_modify_after_save": true,
+        "notice_countdown_seconds": 5
+    },
+    "notice": [
+        "示例通知：每位老师有 10 个预约名额。",
+        "示例通知：每个家庭最多可约 2 科老师。",
+        "示例通知：请按预约时间前往指定地点。"
+    ],
+    "classes": [
+        "示例一班",
+        "示例二班"
+    ],
+    "teachers": [
+        {
+            "id": 1,
+            "name": "张老师",
+            "class": ["示例一班", "示例二班"],
+            "location": "示例一班教室",
+            "subject": "语文"
+        },
+        {
+            "id": 2,
+            "name": "李老师",
+            "class": ["示例一班"],
+            "location": "示例二班教室",
+            "subject": "数学"
+        },
+        {
+            "id": 3,
+            "name": "王老师",
+            "class": ["示例二班"],
+            "location": "示例二班教室",
+            "subject": "英语"
+        }
+    ]
+}

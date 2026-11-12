@@ -1,0 +1,17 @@
+<meta name="theme-color" content="#f6f8fb">
+<script>
+(function () {
+    try {
+        var key = 'aqs-theme';
+        var theme = localStorage.getItem(key);
+        if (!theme) {
+            theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) {
+            meta.setAttribute('content', theme === 'dark' ? '#0a111a' : '#f6f8fb');
+        }
+    } catch (e) {}
+})();
+</script>

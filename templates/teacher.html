@@ -3,27 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家长会预约系统 - 教师主页</title>
+    <title>教师主页 - 家长会预约系统</title>
+    {% include '_theme_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
 </head>
 <body>
-
-    <a href="/logout" class="logout-btn">登出</a>
-    <div id="app" class="layout-stretch">
-        <div id="appointment-screen" class="screen parent-screen {% if not t_data %}active{% endif %}">
-            <div class="container parent-container parent-container-empty">
-                <div class="header-info">
-                    <h2>欢迎，{{ t_name }}</h2>
-                </div>
-                <div class="parent-action-card">
-                    <a href="/teacher/ontime" class="button-primary">查看实时队列</a>
-                    <a href="/teacher/list" class="button-primary">查看预约列表</a>
-                    <a href="/teacher/setting" class="button-primary">教师设置</a>
-                </div>
+    {% include '_icons.html' %}
+    <div class="page">
+        <header class="topbar">
+            <div class="topbar-title">
+                <span class="topbar-grade">{{ t_grade }}</span>
+                <h1>教师工作台</h1>
             </div>
-        </div>
-    </div>
+            <div class="topbar-actions">
+                <button class="icon-btn" data-theme-toggle type="button" aria-label="切换主题" title="切换主题">
+                    <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg>
+                    <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg>
+                </button>
+                <a href="/logout" class="btn btn-ghost" aria-label="登出">
+                    <svg class="icon" aria-hidden="true"><use href="#i-log-out"></use></svg><span class="btn-label">登出</span>
+                </a>
+            </div>
+        </header>
 
-    <script src="{{ url_for('static', filename='js/teacher.js') }}"></script>
+        <main class="card content">
+            <p class="muted">欢迎，{{ t_name }}</p>
+
+            <div class="action-grid">
+                <a href="/teacher/ontime" class="action-tile">
+                    <span class="action-icon"><svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg></span>
+                    <span class="action-title">实时队列</span>
+                    <span class="action-desc">查看当前谈话与等待家长</span>
+                </a>
+                <a href="/teacher/list" class="action-tile">
+                    <span class="action-icon"><svg class="icon" aria-hidden="true"><use href="#i-list"></use></svg></span>
+                    <span class="action-title">预约列表</span>
+                    <span class="action-desc">查看名单与预计时间</span>
+                </a>
+                <a href="/teacher/setting" class="action-tile">
+                    <span class="action-icon"><svg class="icon" aria-hidden="true"><use href="#i-settings"></use></svg></span>
+                    <span class="action-title">教师设置</span>
+                    <span class="action-desc">设置接待人数与提前名单</span>
+                </a>
+            </div>
+        </main>
+    </div>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+    {% include '_footer.html' %}
 </body>
 </html>

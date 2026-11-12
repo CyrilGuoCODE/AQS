@@ -3,23 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家长会预约系统 - 密钥验证</title>
+    <title>家长会预约系统</title>
+    {% include '_theme_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
 </head>
 <body>
-    <div id="app">
-        <div class="container">
-            <h1>家长会预约系统</h1>
-           
-            <div class="key-input-wrapper">
-                <label for="key-input">请输入密钥:</label>
-                <input type="password" id="key-input" placeholder="请输入密钥" autocomplete="off">
-                <button id="key-submit-btn">确认</button>
+    {% include '_icons.html' %}
+    <button class="icon-btn theme-float" data-theme-toggle type="button" aria-label="切换主题" title="切换主题">
+        <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg>
+        <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg>
+    </button>
+
+    <div class="login-shell">
+        <div class="card login-card">
+            <div class="brand">
+                <span class="brand-mark">
+                    <svg class="icon" aria-hidden="true"><use href="#i-logo"></use></svg>
+                </span>
+                <h1>家长会预约系统</h1>
             </div>
+            <p class="brand-sub">请选择年级并输入密钥</p>
+
+            <div class="form-stack">
+                <select id="grade-select" class="field" aria-label="选择年级">
+                    {% for grade in t_grades %}
+                    <option value="{{ grade }}" {% if grade == t_default_grade %}selected{% endif %}>{{ grade }}</option>
+                    {% endfor %}
+                </select>
+                <input type="password" id="key-input" class="field" placeholder="请输入密钥" autocomplete="off" aria-label="密钥">
+                <button id="key-submit-btn" class="btn btn-primary btn-block">进入</button>
+            </div>
+
             <p id="key-error" class="error-message"></p>
             <div id="additional-form-container"></div>
         </div>
     </div>
     <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+    {% include '_footer.html' %}
 </body>
 </html>

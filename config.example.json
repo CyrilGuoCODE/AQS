@@ -1,0 +1,21 @@
+{
+    "_说明": "复制为 config.json 后，把 active_grades 改成 grades 目录下实际存在的年级文件名",
+    "active_grades": [
+        "示例年级"
+    ],
+    "default_grade": "示例年级",
+    "debug": false,
+    "server": {
+        "host": "127.0.0.1",
+        "port": 5001
+    },
+    "security": {
+        "session_cookie_secure": false
+    },
+    "rate_limit": {
+        "verify_per_hour": 120,
+        "handle_per_hour": 300,
+        "save_per_hour": 120,
+        "setting_per_hour": 60
+    }
+}

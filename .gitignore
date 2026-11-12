@@ -1,2 +1,41 @@
-.idea
-log
+# IDE / 编辑器
+.idea/
+.vscode/
+*.iml
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# 运行时数据与密钥
+grades/*.json
+!grades/grade.example.json
+config.json
+data.json
+data.json.tmp
+.secret_key
+log/
+instance/
+
+# 测试与临时产物
+test/
+.screenshots/
+test-results/
+playwright-report/
+*_test_results.json
+*.log
+*.tmp
+*.bak
+
+# 系统
+.DS_Store
+Thumbs.db

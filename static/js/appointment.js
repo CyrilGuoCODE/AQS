@@ -1,13 +1,18 @@
 let selectedTeachers = [];
 let lockedTeachers = [];
 let countdownTimer = null;
-let test = [];
+let previousSelections = [];
+let submitting = false;
 
 function showScreen(screenId) {
     document.querySelectorAll('.screen').forEach(screen => {
         screen.classList.remove('active');
     });
-    document.getElementById(screenId).classList.add('active');
+    const screen = document.getElementById(screenId);
+    if (screen) {
+        screen.classList.add('active');
+    }
+    window.scrollTo({top: 0, behavior: 'auto'});
 }
 
 function showNoticeModal() {
@@ -15,14 +20,20 @@ function showNoticeModal() {
     const closeBtn = document.getElementById('close-notice-btn');
     const countdownText = document.getElementById('countdown-text');
 
+    if (!modal || !closeBtn || !countdownText || typeof noticeCount === 'undefined' || noticeCount <= 0) {
+        showTeacherScreen();
+        return;
+    }
+
+    modal.classList.remove('closing');
     modal.classList.add('active');
     closeBtn.disabled = true;
 
-    let countdown = 5;
+    let countdown = Number(noticeCount);
     countdownText.textContent = `关闭(${countdown})`;
 
     countdownTimer = setInterval(() => {
-        countdown--;
+        countdown -= 1;
         if (countdown > 0) {
             countdownText.textContent = `关闭(${countdown})`;
         } else {
@@ -35,84 +46,137 @@ function showNoticeModal() {
 
 function closeNoticeModal() {
     const modal = document.getElementById('notice-modal');
-    modal.classList.remove('active');
     if (countdownTimer) {
         clearInterval(countdownTimer);
+        countdownTimer = null;
     }
-    showTeacherScreen();
+    if (!modal || !modal.classList.contains('active')) {
+        showTeacherScreen();
+        return;
+    }
+    if (modal.classList.contains('closing')) {
+        return;
+    }
+    modal.classList.add('closing');
+    setTimeout(() => {
+        modal.classList.remove('active', 'closing');
+        showTeacherScreen();
+    }, 140);
+}
+
+function findTeacherById(teacherId) {
+    return teachers.find(teacher => String(teacher.id) === String(teacherId));
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text == null ? '' : String(text);
+    return div.innerHTML;
+}
+
+function findRecord(records, teacherId) {
+    return (records || []).find(record => String(record.teacher_id) === String(teacherId));
 }
 
 function showTeacherScreen() {
-    if (typeof mustAppointments !== 'undefined' && Array.isArray(mustAppointments)) {
-        lockedTeachers = mustAppointments.map(teacher => {
-            return teachers.find(t => String(t.id) === String(teacher.teacher_id));
-        }).filter(t => t !== undefined);
-        
+    if (Array.isArray(mustAppointments)) {
+        lockedTeachers = mustAppointments
+            .map(record => findTeacherById(record.teacher_id))
+            .filter(teacher => teacher !== undefined);
         selectedTeachers = [...lockedTeachers];
     }
-    
-    if (typeof previousAppointments !== 'undefined' && Array.isArray(previousAppointments)) {
-        previousAppointments.forEach(teacher => {
-            const teacher1 = teachers.find(t => String(t.id) === String(teacher.teacher_id));
-            if (teacher1 && selectedTeachers.find(t => t.id === teacher1.id) === undefined) {
-                selectedTeachers.push(teacher1);
+
+    if (Array.isArray(previousAppointments)) {
+        previousAppointments.forEach(record => {
+            const teacher = findTeacherById(record.teacher_id);
+            const alreadySelected = teacher && selectedTeachers.some(item => String(item.id) === String(teacher.id));
+            if (teacher && !alreadySelected) {
+                selectedTeachers.push(teacher);
             }
         });
     }
 
-    test = [...selectedTeachers]
-    
+    previousSelections = [...selectedTeachers];
+
     showScreen('teacher-screen');
     renderTeachers();
     updateSelectedCount();
 }
 
+function isLocked(teacher) {
+    return lockedTeachers.some(item => String(item.id) === String(teacher.id));
+}
+
+function isSelected(teacher) {
+    return selectedTeachers.some(item => String(item.id) === String(teacher.id));
+}
+
 function renderTeachers() {
     const grid = document.getElementById('teacher-grid');
+    if (!grid) {
+        return;
+    }
     grid.innerHTML = '';
 
     teachers.forEach(teacher => {
-        if (teacher.class.indexOf(className) === -1) return;
+        if (!Array.isArray(teacher.class) || teacher.class.indexOf(className) === -1) {
+            return;
+        }
 
         const teacherSetting = setting[String(teacher.id)] || {maxParents: 10, peoples: 0};
         let currentPeoples = teacherSetting.peoples || 0;
         const maxParents = teacherSetting.maxParents || 10;
-        const isMust = lockedTeachers.find(t => t.id === teacher.id) !== undefined;
-        if (!isMust && test.find(t => t.id === teacher.id)) currentPeoples = previousAppointments.find(t => t.teacher_id === teacher.id).ranking;
-        if (isMust) currentPeoples = mustAppointments.find(t => t.teacher_id === teacher.id).ranking;
+        const must = isLocked(teacher);
+        const selected = isSelected(teacher);
+        const previousRecord = findRecord(previousAppointments, teacher.id);
+        const mustRecord = findRecord(mustAppointments, teacher.id);
+
+        if (must && mustRecord) {
+            currentPeoples = mustRecord.ranking;
+        } else if (previousRecord) {
+            currentPeoples = previousRecord.ranking;
+        }
+
         const isFull = currentPeoples >= maxParents;
+        const blocked = isFull && !selected;
+
         const appointmentStartTime = new Date(startTime);
         const estimatedTime = new Date(appointmentStartTime.getTime() + currentPeoples * meetingDuration * 60000);
         const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
 
         const card = document.createElement('div');
         card.className = 'teacher-card';
-        if (isFull) {
+        if (blocked) {
             card.classList.add('disabled');
         }
-        if (isMust) {
+        if (must) {
             card.classList.add('must-locked');
         }
-        if (selectedTeachers.find(t => t.id === teacher.id)) {
+        if (selected) {
             card.classList.add('selected');
         }
 
         card.innerHTML = `
-            <div class="teacher-name">${teacher.subject}${teacher.name}</div>
-            <div class="teacher-info">
-                <span><strong>地点:</strong> <span class="waiting-count">${teacher.location}</span></span>
+            <div class="teacher-card-head">
+                <span class="teacher-name">${escapeHtml(teacher.subject)}${escapeHtml(teacher.name)}</span>
+                ${must ? '<span class="tag tag-locked">指定</span>' : ''}
+                ${blocked ? '<span class="tag tag-full">已满</span>' : ''}
             </div>
-            <div class="teacher-info">
-                <span><strong>前方等待:</strong> <span class="waiting-count">${currentPeoples}人</span></span>
+            <div class="meta-row">
+                <span class="meta-label">地点</span>
+                <span class="meta-value">${escapeHtml(teacher.location)}</span>
             </div>
-            <div class="teacher-info">
-                <span><strong>预计时间:</strong> <span class="waiting-count">${isFull ? '已满' : estimatedTimeStr}</span></span>
+            <div class="meta-row">
+                <span class="meta-label">前方等待</span>
+                <span class="meta-value">${currentPeoples} 人</span>
             </div>
-            ${isFull ? '<div class="full-badge">已满</div>' : ''}
-            ${isMust ? '<div class="must-badge">指定</div>' : ''}
+            <div class="meta-row">
+                <span class="meta-label">预计时间</span>
+                <span class="meta-value">${isFull ? '已满' : estimatedTimeStr}</span>
+            </div>
         `;
 
-        if (!isFull && !isMust) {
+        if (!must && (!blocked || selected)) {
             card.addEventListener('click', () => toggleTeacher(teacher, card));
         }
         grid.appendChild(card);
@@ -120,136 +184,224 @@ function renderTeachers() {
 }
 
 function toggleTeacher(teacher, cardElement) {
-    const isMust = lockedTeachers.find(t => t.id === teacher.id) !== undefined;
-    
-    if (isMust) {
-        alert('该老师指定了您，无法取消');
+    if (isLocked(teacher)) {
+        showToast('该老师指定了您，无法取消');
         return;
     }
 
     const teacherSetting = setting[String(teacher.id)] || {maxParents: 10, peoples: 0};
-    const currentPeoples = teacherSetting.peoples || 0;
-    const maxParents = teacherSetting.maxParents || 10;
-    
-    if (currentPeoples >= maxParents) {
-        alert('该老师的预约人数已满，无法预约');
-        return;
-    }
-
-    const index = selectedTeachers.findIndex(t => t.id === teacher.id);
+    const index = selectedTeachers.findIndex(item => String(item.id) === String(teacher.id));
 
     if (index > -1) {
         selectedTeachers.splice(index, 1);
         cardElement.classList.remove('selected');
-    } else {
-        const availableSlots = maxSelectable - lockedTeachers.length;
-        const selectableCount = selectedTeachers.filter(t => lockedTeachers.find(lt => lt.id === t.id) === undefined).length;
-        
-        if (selectableCount >= availableSlots) {
-            alert(`最多只能选择${availableSlots}位可选老师（老师指定已占用${lockedTeachers.length}个名额）`);
-            return;
-        }
-        selectedTeachers.push(teacher);
-        cardElement.classList.add('selected');
+        updateSelectedCount();
+        return;
     }
 
+    if ((teacherSetting.peoples || 0) >= (teacherSetting.maxParents || 10)) {
+        showToast('该老师的预约人数已满，无法预约');
+        return;
+    }
+
+    const availableSlots = Math.max(0, maxSelectable - lockedTeachers.length);
+    const selectableCount = selectedTeachers.filter(
+        item => !lockedTeachers.some(locked => String(locked.id) === String(item.id))
+    ).length;
+
+    if (selectableCount >= availableSlots) {
+        showToast(`最多只能选择${availableSlots}位可选老师`);
+        return;
+    }
+
+    selectedTeachers.push(teacher);
+    cardElement.classList.add('selected');
     updateSelectedCount();
 }
 
 function updateSelectedCount() {
-    const count = selectedTeachers.length;
-    const mustCount = lockedTeachers.length;
-    const availableSlots = maxSelectable - mustCount;
-    const selectableCount = selectedTeachers.filter(t => lockedTeachers.find(lt => lt.id === t.id) === undefined).length;
-    const remainingSlots = availableSlots - selectableCount;
-    
-    document.getElementById('selected-count').textContent = `${count}（指定${mustCount}，可选${remainingSlots}/${availableSlots}）`;
+    const countElement = document.getElementById('selected-count');
+    if (countElement) {
+        countElement.textContent = selectedTeachers.length;
+    }
+
     const submitBtn = document.getElementById('submit-btn');
-    submitBtn.disabled = count === 0;
+    if (submitBtn) {
+        submitBtn.disabled = selectedTeachers.length === 0;
+    }
 }
 
 function submitAppointment() {
-    const allSelectedTeachers = [...selectedTeachers];
-    
-    if (allSelectedTeachers.length === 0) {
-        alert('请至少选择一位老师');
+    if (submitting) {
         return;
     }
 
+    const allSelectedTeachers = [...selectedTeachers];
+
+    if (allSelectedTeachers.length === 0) {
+        showToast('请至少选择一位老师');
+        return;
+    }
+
+    submitting = true;
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '提交中…';
+    }
+
     const scheduleList = document.getElementById('schedule-list');
-    scheduleList.innerHTML = '';
+    if (scheduleList) {
+        scheduleList.innerHTML = '';
+    }
 
     const appointmentStartTime = new Date(startTime);
 
-    allSelectedTeachers.forEach((teacher, index) => {
+    allSelectedTeachers.forEach(teacher => {
         const teacherSetting = setting[String(teacher.id)] || {maxParents: 10, peoples: 0};
         let waitingCount = teacherSetting.peoples || 0;
-        const isMust = lockedTeachers.find(t => t.id === teacher.id) !== undefined;
-        if (!isMust && test.find(t => t.id === teacher.id)) waitingCount = previousAppointments.find(t => t.teacher_id === teacher.id).ranking;
-        if (isMust) waitingCount = mustAppointments.find(t => t.teacher_id === teacher.id).ranking;
-        const totalWaiting = waitingCount;
-        const estimatedTime = new Date(appointmentStartTime.getTime() + totalWaiting * meetingDuration * 60000);
+        const must = isLocked(teacher);
+        const previousRecord = findRecord(previousAppointments, teacher.id);
+        const mustRecord = findRecord(mustAppointments, teacher.id);
+
+        if (must && mustRecord) {
+            waitingCount = mustRecord.ranking;
+        } else if (previousRecord) {
+            waitingCount = previousRecord.ranking;
+        }
+
+        const estimatedTime = new Date(appointmentStartTime.getTime() + waitingCount * meetingDuration * 60000);
         const estimatedTimeStr = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
 
         const scheduleItem = document.createElement('div');
         scheduleItem.className = 'schedule-item';
-        if (isMust) {
-            scheduleItem.classList.add('must');
+        if (must) {
+            scheduleItem.classList.add('schedule-item-must');
         }
         scheduleItem.innerHTML = `
-            <div class="schedule-item-header">
-                <span class="schedule-teacher-name">${teacher.subject}${teacher.name}${isMust ? ' <span style="color: #ff4d4f;">（老师指定）</span>' : ''}</span>
-                <span class="schedule-time">预计时间: ${estimatedTimeStr}</span>
+            <div class="schedule-head">
+                <span class="schedule-teacher">${escapeHtml(teacher.subject)}${escapeHtml(teacher.name)}${must ? '（指定）' : ''}</span>
+                <span class="schedule-time">预计 ${estimatedTimeStr}</span>
             </div>
-            <div class="schedule-details">
-                <p class="schedule-location"><strong style="color: #333;">前方等待: </strong>${waitingCount}人</p>
-                <p class="schedule-location"><strong style="color: #333;">前往位置: </strong>${teacher.location}</p>
+            <div class="meta-row">
+                <span class="meta-label">前方等待</span>
+                <span class="meta-value">${waitingCount} 人</span>
+            </div>
+            <div class="meta-row">
+                <span class="meta-label">前往位置</span>
+                <span class="meta-value">${escapeHtml(teacher.location)}</span>
             </div>
         `;
-        scheduleList.appendChild(scheduleItem);
+        if (scheduleList) {
+            scheduleList.appendChild(scheduleItem);
+        }
     });
 
-    const selectableTeachers = allSelectedTeachers.filter(teacher => 
-        lockedTeachers.find(t => t.id === teacher.id) === undefined
+    const selectableTeachers = allSelectedTeachers.filter(
+        teacher => !lockedTeachers.some(locked => String(locked.id) === String(teacher.id))
     );
     const appointmentPayload = selectableTeachers.map(teacher => teacher.id);
 
-    document.getElementById('parent-name-display').textContent = name;
-    showScreen('schedule-screen');
-
     fetch('/parent/appointment/save', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            appointments: appointmentPayload
-        })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({appointments: appointmentPayload})
     })
         .then(response => response.json())
         .then(data => {
             if (!data.success) {
-                alert(data.message || '预约保存失败，请稍后重试');
+                if (data.setting && typeof data.setting === 'object') {
+                    Object.assign(setting, data.setting);
+                }
+                showToast(data.message || '预约保存失败，请稍后重试');
                 showTeacherScreen();
+                return;
             }
+
+            const nameDisplay = document.getElementById('parent-name-display');
+            if (nameDisplay) {
+                nameDisplay.textContent = name;
+            }
+            showScreen('schedule-screen');
         })
         .catch(() => {
-            alert('预约保存失败，请检查网络后重试');
+            showToast('预约保存失败，请检查网络后重试');
+            showTeacherScreen();
+        })
+        .finally(() => {
+            submitting = false;
+            if (submitBtn) {
+                submitBtn.textContent = '提交预约';
+                updateSelectedCount();
+            }
         });
 }
 
-function formatTime(minutes) {
-    const now = new Date();
-    const targetTime = new Date(now.getTime() + minutes * 60000);
-    const hours = targetTime.getHours().toString().padStart(2, '0');
-    const mins = targetTime.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${mins}`;
+function initScreenSwipe() {
+    const container = document.querySelector('.page');
+    const teacherScreen = document.getElementById('teacher-screen');
+    const scheduleScreen = document.getElementById('schedule-screen');
+
+    if (!container || !teacherScreen || !scheduleScreen) {
+        return;
+    }
+
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+
+    container.addEventListener('touchstart', event => {
+        if (event.touches.length !== 1) {
+            tracking = false;
+            return;
+        }
+        const touch = event.touches[0];
+        if (touch.clientX < 32) {
+            tracking = false;
+            return;
+        }
+        startX = touch.clientX;
+        startY = touch.clientY;
+        tracking = true;
+    }, {passive: true});
+
+    container.addEventListener('touchend', event => {
+        if (!tracking) {
+            return;
+        }
+        tracking = false;
+
+        const touch = event.changedTouches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+
+        if (Math.abs(dx) < 64 || Math.abs(dy) > 48) {
+            return;
+        }
+
+        const scheduleList = document.getElementById('schedule-list');
+        const hasSchedule = scheduleList && scheduleList.children.length > 0;
+
+        if (dx < 0 && teacherScreen.classList.contains('active') && hasSchedule) {
+            showScreen('schedule-screen');
+        } else if (dx > 0 && scheduleScreen.classList.contains('active')) {
+            showScreen('teacher-screen');
+        }
+    }, {passive: true});
 }
 
 document.addEventListener('DOMContentLoaded', function () {
     showNoticeModal();
 
-    document.getElementById('close-notice-btn').addEventListener('click', closeNoticeModal);
+    const closeBtn = document.getElementById('close-notice-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeNoticeModal);
+    }
 
-    document.getElementById('submit-btn').addEventListener('click', submitAppointment);
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', submitAppointment);
+    }
+
+    initScreenSwipe();
 });

@@ -1,27 +1,58 @@
 let currentRole = '';
 
-document.getElementById('key-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        checkKey();
-    }
-});
+function applyUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const gradeValue = (params.get('grade') || '').trim();
+    const keyValue = (params.get('key') || '').trim();
 
-document.getElementById('key-submit-btn').addEventListener('click', checkKey);
-
-const presetParams = new URLSearchParams(window.location.search);
-const presetKey = presetParams.get('pwd');
-if (presetKey) {
+    const gradeSelect = document.getElementById('grade-select');
     const keyInput = document.getElementById('key-input');
-    keyInput.value = presetKey;
-    checkKey();
+
+    let gradeMatched = false;
+    if (gradeValue && gradeSelect) {
+        const matched = Array.from(gradeSelect.options).find(option => option.value === gradeValue);
+        if (matched) {
+            gradeSelect.value = matched.value;
+            gradeMatched = true;
+        }
+    }
+
+    if (keyValue && keyInput) {
+        keyInput.value = keyValue;
+    }
+
+    if (gradeMatched && keyValue) {
+        checkKey();
+    } else if (keyValue && keyInput) {
+        keyInput.focus();
+    }
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+    applyUrlParams();
+
+    document.getElementById('key-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            checkKey();
+        }
+    });
+
+    document.getElementById('key-submit-btn').addEventListener('click', checkKey);
+});
+
 function checkKey() {
+    const gradeSelect = document.getElementById('grade-select');
     const keyInput = document.getElementById('key-input');
     const keyError = document.getElementById('key-error');
+    const grade = gradeSelect.value;
     const key = keyInput.value.trim();
 
     keyError.textContent = '';
+
+    if (!grade) {
+        keyError.textContent = '请选择年级';
+        return;
+    }
 
     if (!key) {
         keyError.textContent = '请输入密钥';
@@ -30,87 +61,79 @@ function checkKey() {
 
     fetch('/verify-key', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ key: key })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({grade: grade, key: key})
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                keyError.textContent = data.message || '密钥错误，请重新输入';
+                keyInput.value = '';
+                return;
+            }
             currentRole = data.role;
+            gradeSelect.disabled = true;
             keyInput.disabled = true;
             document.getElementById('key-submit-btn').disabled = true;
-            
+
             if (data.role === 'parent') {
                 showParentForm();
-            } else if (data.role === 'teacher') {
+            } else {
                 showTeacherForm();
             }
-        } else {
-            keyError.textContent = data.message || '密钥错误，请重新输入';
+        })
+        .catch(() => {
+            keyError.textContent = '验证失败，请重试';
             keyInput.value = '';
-        }
-    })
-    .catch(error => {
-        keyError.textContent = '验证失败，请重试';
-        keyInput.value = '';
-    });
+        });
 }
 
 function showParentForm() {
     const container = document.getElementById('additional-form-container');
     container.innerHTML = `
-        <div class="name-input-wrapper">
-            <label for="class-select">请选择班级:</label>
-            <select id="class-select" class="teacher-select">
+        <div class="form-stack form-stack-spaced">
+            <select id="class-select" class="field" aria-label="选择班级">
                 <option value="">请选择班级</option>
             </select>
-            <label for="student-name-input">请输入孩子姓名:</label>
-            <input type="text" id="student-name-input" placeholder="请输入孩子姓名" autocomplete="off">
-            <button id="student-name-submit-btn">确认</button>
+            <input type="text" id="student-name-input" class="field" placeholder="请输入孩子姓名" autocomplete="off" aria-label="孩子姓名">
+            <button id="student-name-submit-btn" class="btn btn-primary btn-block">确认</button>
         </div>
         <p id="student-name-error" class="error-message"></p>
     `;
-    
+
     const nameInput = document.getElementById('student-name-input');
-    const submitBtn = document.getElementById('student-name-submit-btn');
-    
-    nameInput.addEventListener('keypress', (e) => {
+    nameInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             submitStudentName();
         }
     });
-    
-    submitBtn.addEventListener('click', submitStudentName);
+    document.getElementById('student-name-submit-btn').addEventListener('click', submitStudentName);
+
+    loadClasses();
     nameInput.focus();
-    loadClasses('初二');
 }
 
 function showTeacherForm() {
     const container = document.getElementById('additional-form-container');
     container.innerHTML = `
-        <div class="teacher-select-wrapper">
-            <label for="teacher-select">请选择老师:</label>
-            <select id="teacher-select" class="teacher-select">
+        <div class="form-stack form-stack-spaced">
+            <select id="teacher-select" class="field" aria-label="选择老师">
                 <option value="">请选择老师</option>
             </select>
         </div>
         <p id="teacher-select-error" class="error-message"></p>
     `;
-    
+
     loadTeachers();
-    
-    const select = document.getElementById('teacher-select');
-    select.addEventListener('change', submitTeacherSelect);
+    document.getElementById('teacher-select').addEventListener('change', submitTeacherSelect);
 }
 
 function submitStudentName() {
     const nameInput = document.getElementById('student-name-input');
-    const classNameSelect = document.getElementById('class-select');
+    const classSelect = document.getElementById('class-select');
     const nameError = document.getElementById('student-name-error');
     const name = nameInput.value.trim();
-    const className = classNameSelect.value;
+    const className = classSelect.value;
 
     nameError.textContent = '';
 
@@ -118,7 +141,6 @@ function submitStudentName() {
         nameError.textContent = '请输入孩子姓名';
         return;
     }
-
     if (!className) {
         nameError.textContent = '请选择班级';
         return;
@@ -126,61 +148,62 @@ function submitStudentName() {
 
     fetch('/handle', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: name, className: className })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: name, className: className})
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = '/parent';
-        } else {
-            nameError.textContent = data.message || '保存失败，请重试';
-        }
-    })
-    .catch(error => {
-        nameError.textContent = '登录失败，请重试';
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/parent';
+            } else {
+                nameError.textContent = data.message || '保存失败，请重试';
+            }
+        })
+        .catch(() => {
+            nameError.textContent = '登录失败，请重试';
+        });
 }
 
 function loadTeachers() {
     fetch('/get_teachers')
-    .then(response => response.json())
-    .then(data => {
-        const select = document.getElementById('teacher-select');
-        select.innerHTML = '<option value="">请选择老师</option>';
-        data.forEach(teacher => {
-            const option = document.createElement('option');
-            option.value = teacher.id;
-            option.textContent = teacher.subject + teacher.name;
-            select.appendChild(option);
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('teacher-select');
+            if (!select) {
+                return;
+            }
+            select.innerHTML = '<option value="">请选择老师</option>';
+            (Array.isArray(data) ? data : []).forEach(teacher => {
+                const option = document.createElement('option');
+                option.value = teacher.id;
+                option.textContent = teacher.subject + teacher.name;
+                select.appendChild(option);
+            });
+        })
+        .catch(() => {
+            console.error('Failed to load teachers');
         });
-    })
-    .catch(error => {
-        console.error('Failed to load teachers:', error);
-    });
 }
 
-function loadClasses(grade) {
-    fetch(`/get_classes?grade=${encodeURIComponent(grade)}`)
-    .then(response => response.json())
-    .then(data => {
-        const select = document.getElementById('class-select');
-        if (!select) {
-            return;
-        }
-        select.innerHTML = '<option value="">请选择班级</option>';
-        (data.classes || []).forEach(className => {
-            const option = document.createElement('option');
-            option.value = className;
-            option.textContent = className;
-            select.appendChild(option);
+function loadClasses() {
+    fetch('/get_classes')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('class-select');
+            if (!select) {
+                return;
+            }
+            select.innerHTML = '<option value="">请选择班级</option>';
+            (data.classes || []).forEach(className => {
+                const option = document.createElement('option');
+                option.value = className;
+                option.textContent = className;
+                select.appendChild(option);
+            });
+        })
+        .catch(() => {
+            console.error('Failed to load classes');
         });
-    })
-    .catch(error => {
-        console.error('Failed to load classes:', error);
-    });
 }
 
 function submitTeacherSelect() {
@@ -189,27 +212,24 @@ function submitTeacherSelect() {
     const teacherId = select.value;
 
     teacherError.textContent = '';
-
     if (!teacherId) {
         return;
     }
 
     fetch('/handle', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: teacherId })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: teacherId})
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = '/teacher';
-        } else {
-            teacherError.textContent = data.message || '保存失败，请重试';
-        }
-    })
-    .catch(error => {
-        teacherError.textContent = '保存失败，请重试';
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/teacher';
+            } else {
+                teacherError.textContent = data.message || '保存失败，请重试';
+            }
+        })
+        .catch(() => {
+            teacherError.textContent = '保存失败，请重试';
+        });
 }

@@ -3,46 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家长会预约系统 - 实时等待队列</title>
+    <title>实时队列 - 家长会预约系统</title>
+    {% include '_theme_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
 </head>
 <body>
-    <a href="/teacher" class="back-btn">返回</a>
-    <a href="/logout" class="logout-btn">登出</a>
-    <div id="app">
-        <div id="teacher-dashboard-screen" class="screen active">
-            <div class="container">
-                <h2>老师管理面板</h2>
-
-                <div id="queue-display" class="queue-display">
-                    <div class="current-parent-section">
-                        <h3>当前谈话家长</h3>
-                        <div id="current-parent" class="current-parent-card">
-                        </div>
-                        <div class="action-buttons">
-                            <button id="skip-btn" class="skip-btn">跳过</button>
-                            <button id="complete-btn" class="complete-btn">标记已完成</button>
-                        </div>
-                    </div>
-
-                    <div class="waiting-queue-section">
-                        <h3>等待队列（后3位）</h3>
-                        <div id="waiting-queue" class="waiting-queue">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="empty-queue" class="empty-queue" style="display: none;">
-                    <p class="info-text">当前没有等待的家长</p>
-                </div>
+    {% include '_icons.html' %}
+    <div class="page">
+        <header class="topbar">
+            <div class="topbar-title">
+                <span class="topbar-grade">{{ t_grade }}</span>
+                <h1>实时队列</h1>
             </div>
-        </div>
+            <div class="topbar-actions">
+                <button class="icon-btn" data-theme-toggle type="button" aria-label="切换主题" title="切换主题">
+                    <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg>
+                    <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg>
+                </button>
+                <a href="/teacher" class="btn btn-ghost" aria-label="返回">
+                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"></use></svg><span class="btn-label">返回</span>
+                </a>
+                <a href="/logout" class="btn btn-ghost" aria-label="登出">
+                    <svg class="icon" aria-hidden="true"><use href="#i-log-out"></use></svg><span class="btn-label">登出</span>
+                </a>
+            </div>
+        </header>
+
+        <main class="card content">
+            <div id="queue-display" class="queue-layout">
+                <section class="queue-section">
+                    <div class="section-head">
+                        <h3>当前谈话</h3>
+                    </div>
+                    <div id="current-parent" class="current-card" aria-live="polite"></div>
+                    <div class="action-buttons">
+                        <button id="skip-btn" class="btn btn-outline">
+                            <svg class="icon" aria-hidden="true"><use href="#i-skip"></use></svg>跳过
+                        </button>
+                        <button id="complete-btn" class="btn btn-primary">
+                            <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>标记已完成
+                        </button>
+                    </div>
+                    <p class="queue-hint">完成或跳过后，将自动切换到下一位家长</p>
+                </section>
+
+                <section class="queue-section">
+                    <div class="section-head">
+                        <h3>等待队列</h3>
+                        <span id="waiting-count" class="count-badge">0 位</span>
+                        <span id="live-badge" class="live-badge offline"><span class="live-dot" aria-hidden="true"></span><span id="live-text">连接中</span></span>
+                    </div>
+                    <div id="waiting-queue" class="waiting-list" aria-live="polite"></div>
+                </section>
+            </div>
+
+            <div id="empty-queue" class="empty-state" style="display: none;">
+                <svg class="icon" aria-hidden="true"><use href="#i-inbox"></use></svg>
+                <p>当前没有等待的家长</p>
+            </div>
+        </main>
     </div>
+
     <script>
         const queue = {{ t_queue | tojson | safe }};
-        const teacherId = '{{ session.id }}';
+        const teacherId = {{ session.id | tojson | safe }};
     </script>
     <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ontime.js') }}"></script>
+    {% include '_footer.html' %}
 </body>
 </html>

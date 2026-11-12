@@ -7,21 +7,26 @@ class QueueManager {
         this.pendingParentId = null;
         this.skipUntilQueueUpdate = false;
         this.confirmDelay = 2000;
-        this.initSocket();
         this.initElements();
+        this.initSocket();
         this.bindEvents();
         this.render();
     }
 
     initSocket() {
         this.socket = io();
-        
+
         this.socket.on('connect', () => {
+            this.setConnectionState(true);
             this.socket.emit('join_teacher_room', { teacherId: this.teacherId });
         });
 
+        this.socket.on('disconnect', () => {
+            this.setConnectionState(false);
+        });
+
         this.socket.on('queue_update', (data) => {
-            if (!data || data.teacherId !== this.teacherId) {
+            if (!data || String(data.teacherId) !== String(this.teacherId)) {
                 return;
             }
             if (data.queue) {
@@ -33,7 +38,7 @@ class QueueManager {
         });
 
         this.socket.on('promote_rejected', (data = {}) => {
-            if (data.teacherId && data.teacherId !== this.teacherId) {
+            if (data.teacherId && String(data.teacherId) !== String(this.teacherId)) {
                 return;
             }
             this.handlePromotionRejected();
@@ -51,8 +56,20 @@ class QueueManager {
             currentParentCard: document.getElementById('current-parent'),
             waitingQueue: document.getElementById('waiting-queue'),
             completeBtn: document.getElementById('complete-btn'),
-            skipBtn: document.getElementById('skip-btn')
+            skipBtn: document.getElementById('skip-btn'),
+            liveBadge: document.getElementById('live-badge'),
+            liveText: document.getElementById('live-text'),
+            waitingCount: document.getElementById('waiting-count')
         };
+    }
+
+    setConnectionState(online) {
+        if (this.elements.liveBadge) {
+            this.elements.liveBadge.classList.toggle('offline', !online);
+        }
+        if (this.elements.liveText) {
+            this.elements.liveText.textContent = online ? '实时' : '离线';
+        }
     }
 
     bindEvents() {
@@ -65,7 +82,7 @@ class QueueManager {
     }
 
     getWaitingParents() {
-        return this.queue.filter(item => item.status === 'waiting').slice(0, 3);
+        return this.queue.filter(item => item.status === 'waiting');
     }
 
     resetPendingConfirm() {
@@ -138,42 +155,80 @@ class QueueManager {
     }
 
     renderCurrentParent(currentParent) {
+        const card = this.elements.currentParentCard;
+
         if (currentParent) {
-            this.elements.currentParentCard.innerHTML = `
-                <div class="parent-info">
-                    <p><strong>预约家长:</strong> ${this.escapeHtml(currentParent.name)}家长</p>
+            card.classList.remove('is-empty');
+            card.innerHTML = `
+                <div class="current-main">
+                    <span class="current-avatar"><svg class="icon" aria-hidden="true"><use href="#i-user"></use></svg></span>
+                    <div class="current-info">
+                        <div class="current-meta">
+                            <p class="current-label">预约家长</p>
+                            <span class="status-badge status-current">进行中</span>
+                        </div>
+                        <p class="current-name">${this.escapeHtml(currentParent.name || '')}家长</p>
+                    </div>
                 </div>
             `;
-            this.elements.currentParentCard.style.display = 'block';
-            this.elements.completeBtn.style.display = 'block';
-            this.elements.skipBtn.style.display = 'block';
+            card.style.display = 'flex';
+            this.elements.completeBtn.style.display = '';
+            this.elements.skipBtn.style.display = '';
         } else {
-            this.elements.currentParentCard.style.display = 'none';
+            card.classList.add('is-empty');
+            card.innerHTML = `
+                <div class="current-main">
+                    <span class="current-avatar"><svg class="icon" aria-hidden="true"><use href="#i-user"></use></svg></span>
+                    <div class="current-info">
+                        <div class="current-meta">
+                            <p class="current-label">当前状态</p>
+                        </div>
+                        <p class="current-name">暂无正在谈话的家长</p>
+                    </div>
+                </div>
+            `;
+            card.style.display = 'flex';
             this.elements.completeBtn.style.display = 'none';
             this.elements.skipBtn.style.display = 'none';
         }
     }
 
     renderWaitingQueue(waitingParents) {
-        this.elements.waitingQueue.innerHTML = '';
-        
-        if (waitingParents.length > 0) {
-            waitingParents.forEach((parent, index) => {
-                const card = document.createElement('div');
-                card.className = 'waiting-parent-card';
-                card.innerHTML = `
-                    <div class="queue-number">${index + 1}</div>
-                    <div class="parent-info">
-                        <p><strong>预约家长:</strong> ${this.escapeHtml(parent.name)}家长</p>
-                    </div>
-                `;
-                this.elements.waitingQueue.appendChild(card);
-            });
-        } else {
-            const emptyMsg = document.createElement('div');
-            emptyMsg.className = 'empty-waiting';
+        const container = this.elements.waitingQueue;
+        container.innerHTML = '';
+
+        if (this.elements.waitingCount) {
+            this.elements.waitingCount.textContent = `${waitingParents.length} 位`;
+        }
+
+        if (waitingParents.length === 0) {
+            const emptyMsg = document.createElement('p');
+            emptyMsg.className = 'empty-hint';
             emptyMsg.textContent = '暂无等待的家长';
-            this.elements.waitingQueue.appendChild(emptyMsg);
+            container.appendChild(emptyMsg);
+            return;
+        }
+
+        const visibleParents = waitingParents.slice(0, 4);
+        visibleParents.forEach((parent, index) => {
+            const card = document.createElement('div');
+            card.className = 'waiting-item';
+            card.style.animationDelay = `${index * 35}ms`;
+            card.innerHTML = `
+                <span class="queue-number">${index + 1}</span>
+                <div class="parent-info">
+                    <p>${this.escapeHtml(parent.name || '')}家长</p>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        const remaining = waitingParents.length - visibleParents.length;
+        if (remaining > 0) {
+            const more = document.createElement('div');
+            more.className = 'waiting-more';
+            more.textContent = `另有 ${remaining} 位家长等待`;
+            container.appendChild(more);
         }
     }
 
@@ -191,12 +246,15 @@ class QueueManager {
         const waitingParents = this.getWaitingParents();
 
         if (this.queue.length === 0) {
+            if (this.elements.waitingCount) {
+                this.elements.waitingCount.textContent = '0 位';
+            }
             this.elements.queueDisplay.style.display = 'none';
             this.elements.emptyQueue.style.display = 'block';
             return;
         }
 
-        this.elements.queueDisplay.style.display = 'block';
+        this.elements.queueDisplay.style.display = 'grid';
         this.elements.emptyQueue.style.display = 'none';
 
         this.renderCurrentParent(currentParent);
@@ -216,7 +274,7 @@ class QueueManager {
                 parentName: currentParent.name || currentParent.parentName || ''
             });
         } else {
-            console.error('Socket 未连接');
+            showToast('连接已断开，请刷新页面后重试');
         }
     }
 
@@ -233,7 +291,7 @@ class QueueManager {
                 parentName: currentParent.name || currentParent.parentName || ''
             });
         } else {
-            console.error('Socket 未连接');
+            showToast('连接已断开，请刷新页面后重试');
         }
     }
 
@@ -247,7 +305,6 @@ class QueueManager {
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof queue !== 'undefined' && typeof teacherId !== 'undefined') {
         new QueueManager(queue, teacherId);
-        console.log(queue, teacherId);
     } else {
         console.error('Queue or teacherId not defined');
     }

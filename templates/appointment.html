@@ -3,60 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家长会预约系统 - 家长端</title>
+    <title>选择老师 - 家长会预约系统</title>
+    {% include '_theme_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
 </head>
 <body>
-    <a href="/parent" class="back-btn">返回</a>
-    <a href="/logout" class="logout-btn">登出</a>
-    <div id="app">
-        <div id="notice-modal" class="modal">
-            <div class="modal-content">
+    {% include '_icons.html' %}
+    <div class="page">
+        <header class="topbar">
+            <div class="topbar-title">
+                <span class="topbar-grade">{{ t_grade }}</span>
+                <h1>选择预约老师</h1>
+            </div>
+            <div class="topbar-actions">
+                <button class="icon-btn" data-theme-toggle type="button" aria-label="切换主题" title="切换主题">
+                    <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg>
+                    <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg>
+                </button>
+                <a href="/parent" class="btn btn-ghost" aria-label="返回">
+                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"></use></svg><span class="btn-label">返回</span>
+                </a>
+                <a href="/logout" class="btn btn-ghost" aria-label="登出">
+                    <svg class="icon" aria-hidden="true"><use href="#i-log-out"></use></svg><span class="btn-label">登出</span>
+                </a>
+            </div>
+        </header>
+
+        <main id="teacher-screen" class="card content screen active">
+            <div class="summary-bar">
+                <p class="summary-text">{{ t_className }} · {{ t_name }}家长</p>
+                <p class="summary-text">已选择 <span id="selected-count" class="summary-count">0</span> 位（上限 {{ t_max_selectable }} 位）</p>
+            </div>
+
+            <div id="teacher-grid" class="teacher-grid"></div>
+            <div class="sticky-actions">
+                <button id="submit-btn" class="btn btn-primary" disabled>提交预约</button>
+            </div>
+        </main>
+
+        <main id="schedule-screen" class="card content screen">
+            <div class="section-head">
+                <svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg>
+                <h3>预约成功</h3>
+            </div>
+            <p class="muted">预约家长：<span id="parent-name-display"></span></p>
+            <div id="schedule-list" class="schedule-grid"></div>
+            <div class="page-actions">
+                <a href="/parent" class="btn btn-primary">
+                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"></use></svg>返回预约记录
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <div id="notice-modal" class="modal">
+        <div class="modal-card">
+            <div class="modal-head">
+                <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg>
                 <h3>预约须知</h3>
-                <div class="notice-content">
-                    {% for i in t_notice %}
-                    <p>{{i}}</p>
-                    {% endfor %}
-                </div>
-                <div class="countdown">
-                    
-                </div>
-                <button id="close-notice-btn" class="close-btn" disabled><span id="countdown-text">关闭(5)</span></button>
             </div>
-        </div>
-
-        <div id="teacher-screen" class="screen active">
-            <div class="container">
-                <div class="header-info">
-                    <h2>选择预约老师</h2>
-                    <p class="selected-count">已选择: <span id="selected-count">0</span></p>
-                </div>
-                <div id="teacher-grid" class="teacher-grid"></div>
-                <button id="submit-btn" class="submit-btn" disabled>提交预约</button>
-            </div>
-        </div>
-
-        <div id="schedule-screen" class="screen">
-            <div class="container">
-                <h2>预约成功</h2>
-                <div class="schedule-info">
-                    <p class="info-item"><strong>预约家长:</strong> <span id="parent-name-display"></span></p>
-                </div>
-                <div id="schedule-list" class="schedule-list"></div>
-            </div>
+            <ul class="notice-list">
+                {% for line in t_notice %}
+                <li>{{ line }}</li>
+                {% endfor %}
+            </ul>
+            <button id="close-notice-btn" class="btn btn-primary btn-block" disabled>
+                <span id="countdown-text">关闭(5)</span>
+            </button>
         </div>
     </div>
+
     <script>
-        const teachers = {{ t_teacher | tojson | safe }}
-        const name = '{{ t_name }}'
-        const className = '{{ t_className }}'
-        const setting = {{ t_setting | tojson | safe }}
-        const startTime = '{{ t_start_time }}'
-        const mustAppointments = {{ t_must | tojson | safe }}
-        const previousAppointments = {{ t_appointment | tojson | safe }}
-        const meetingDuration = {{ t_meeting_duration | tojson | safe }}
-        const maxSelectable = {{ t_max_selectable | tojson | safe }}
+        const teachers = {{ t_teacher | tojson | safe }};
+        const name = {{ t_name | tojson | safe }};
+        const className = {{ t_className | tojson | safe }};
+        const setting = {{ t_setting | tojson | safe }};
+        const startTime = {{ t_start_time | tojson | safe }};
+        const mustAppointments = {{ t_must | tojson | safe }};
+        const previousAppointments = {{ t_appointment | tojson | safe }};
+        const meetingDuration = {{ t_meeting_duration | tojson | safe }};
+        const maxSelectable = {{ t_max_selectable | tojson | safe }};
+        const noticeCount = {{ t_notice_countdown | tojson | safe }};
     </script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/appointment.js') }}"></script>
+    {% include '_footer.html' %}
 </body>
 </html>

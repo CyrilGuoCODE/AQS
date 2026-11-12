@@ -3,46 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家长会预约系统 - 名单列表</title>
+    <title>预约列表 - 家长会预约系统</title>
+    {% include '_theme_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
 </head>
 <body>
-    <a href="/teacher" class="back-btn">返回</a>
-    <a href="/logout" class="logout-btn">登出</a>
-
-    <div id="app">
-        <div class="container">
-            <div class="header-info">
-                <h2>名单列表</h2>
-                <a href="/teacher/list/download" class="button-primary download-btn">下载为Excel</a>
+    {% include '_icons.html' %}
+    <div class="page">
+        <header class="topbar">
+            <div class="topbar-title">
+                <span class="topbar-grade">{{ t_grade }}</span>
+                <h1>预约列表</h1>
             </div>
-
-            <div class="list-container">
-                <div id="list-table-wrapper" class="list-table-wrapper">
-                    <table class="list-table">
-                        <thead>
-                            <tr>
-                                <th>序号</th>
-                                <th>学生姓名</th>
-                                <th>预计时间</th>
-                                <th>状态</th>
-                            </tr>
-                        </thead>
-                        <tbody id="list-table-body">
-                        </tbody>
-                    </table>
-                </div>
-                <div id="empty-list" class="empty-list">
-                    <p class="empty-hint">当前暂无预约名单</p>
-                </div>
+            <div class="topbar-actions">
+                <button class="icon-btn" data-theme-toggle type="button" aria-label="切换主题" title="切换主题">
+                    <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg>
+                    <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg>
+                </button>
+                <a href="/teacher" class="btn btn-ghost" aria-label="返回">
+                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"></use></svg><span class="btn-label">返回</span>
+                </a>
+                <a href="/teacher/list/download" class="btn btn-outline" title="下载 Excel" aria-label="下载 Excel">
+                    <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg><span class="btn-label">下载 Excel</span>
+                </a>
             </div>
-        </div>
+        </header>
+
+        <main class="card content">
+            <div id="list-table-wrapper" class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>学生姓名</th>
+                            <th>预计时间</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list-table-body"></tbody>
+                </table>
+            </div>
+            <div id="empty-list" class="empty-state" style="display: none;">
+                <svg class="icon" aria-hidden="true"><use href="#i-inbox"></use></svg>
+                <p>当前暂无预约名单</p>
+            </div>
+        </main>
     </div>
-   
+
     <script>
         const t_queue = {{ t_queue | tojson | safe }};
-        const t_start_time = '{{ t_start_time }}';
+        const t_start_time = {{ t_start_time | tojson | safe }};
+        const meetingDuration = {{ t_meeting_duration | tojson | safe }};
     </script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/list.js') }}"></script>
+    {% include '_footer.html' %}
 </body>
-</html> 
+</html>
