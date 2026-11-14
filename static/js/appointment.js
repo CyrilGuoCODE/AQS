@@ -176,7 +176,7 @@ function renderTeachers() {
             </div>
         `;
 
-        if (!must && (!blocked || selected)) {
+        if (!blocked || selected) {
             card.addEventListener('click', () => toggleTeacher(teacher, card));
         }
         grid.appendChild(card);

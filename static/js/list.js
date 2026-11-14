@@ -24,24 +24,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         tableBody.innerHTML = '';
-        const duration = typeof meetingDuration !== 'undefined' ? meetingDuration : 10;
-        const appointmentStartTime = new Date(t_start_time);
-        let activeIndex = 0;
 
         queue.forEach((item, index) => {
             const fullName = item.name || '';
             const status = item.status || 'waiting';
-            let appointmentTime = item.appointmentTime || item.appointment_time;
-            if (status === 'completed') {
-                appointmentTime = '-';
-            } else if (!appointmentTime && !Number.isNaN(appointmentStartTime.getTime())) {
-                const estimatedTime = new Date(appointmentStartTime.getTime() + activeIndex * duration * 60000);
-                appointmentTime = `${estimatedTime.getHours().toString().padStart(2, '0')}:${estimatedTime.getMinutes().toString().padStart(2, '0')}`;
-                activeIndex += 1;
-            } else if (!appointmentTime) {
-                appointmentTime = '-';
-            }
-            appointmentTime = appointmentTime || '-';
+            const appointmentTime = item.appointmentTime || '-';
             const statusText = statusTextMap[status] || '未知';
 
             const row = document.createElement('tr');

@@ -53,8 +53,6 @@
 
     <script>
         const t_queue = {{ t_queue | tojson | safe }};
-        const t_start_time = {{ t_start_time | tojson | safe }};
-        const meetingDuration = {{ t_meeting_duration | tojson | safe }};
     </script>
     <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/list.js') }}"></script>

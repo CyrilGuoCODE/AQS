@@ -1,0 +1,18 @@
+services:
+  aqs:
+    build: .
+    image: aqs:latest
+    container_name: aqs
+    restart: unless-stopped
+    environment:
+      AQS_HOST: 0.0.0.0
+      AQS_PORT: "5001"
+      AQS_DATA_FILE: /app/data/data.json
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:5001:5001"
+    volumes:
+      - ./data:/app/data
+      - ./log:/app/log
+      - ./grades:/app/grades:ro
+      - ./.secret_key:/app/.secret_key:ro

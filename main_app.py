@@ -84,8 +84,13 @@ VERIFY_LIMIT = config_int(rate_limit_config, 'verify_per_hour', 120, 'rate_limit
 HANDLE_LIMIT = config_int(rate_limit_config, 'handle_per_hour', 300, 'rate_limit.handle_per_hour', 1)
 SAVE_LIMIT = config_int(rate_limit_config, 'save_per_hour', 120, 'rate_limit.save_per_hour', 1)
 SETTING_LIMIT = config_int(rate_limit_config, 'setting_per_hour', 60, 'rate_limit.setting_per_hour', 1)
-SERVER_HOST = str(server_config.get('host', '127.0.0.1'))
+SERVER_HOST = os.environ.get('AQS_HOST') or str(server_config.get('host', '127.0.0.1'))
 SERVER_PORT = config_int(server_config, 'port', 5001, 'server.port', 1, 65535)
+if os.environ.get('AQS_PORT'):
+    try:
+        SERVER_PORT = int(os.environ['AQS_PORT'])
+    except ValueError:
+        raise ValueError(f'环境变量 AQS_PORT 需为整数，当前为 {os.environ["AQS_PORT"]!r}')
 DEBUG = config_bool(root_config, 'debug', False, 'debug')
 
 app.config.update(
@@ -197,6 +202,18 @@ def load_grade(grade_name):
     if not cfg['classes']:
         raise ValueError(f'[{grade_name}] classes 不能为空')
 
+    per_class_start = time_settings.get('conversion_start_time_by_class') or {}
+    if not isinstance(per_class_start, dict):
+        raise ValueError(f'[{grade_name}] time_settings.conversion_start_time_by_class 需为对象')
+    cfg['conversion_start_by_class'] = {}
+    for class_name, value in per_class_start.items():
+        class_name = str(class_name).strip()
+        if class_name not in cfg['classes']:
+            raise ValueError(f'[{grade_name}] conversion_start_time_by_class 中的班级不存在：{class_name}')
+        cfg['conversion_start_by_class'][class_name] = config_time(
+            value, label(f'time_settings.conversion_start_time_by_class.{class_name}'), '%Y-%m-%dT%H:%M:%S'
+        )
+
     teachers = cfg.get('teachers') or []
     if not isinstance(teachers, list) or not teachers:
         raise ValueError(f'[{grade_name}] teachers 需为非空数组')
@@ -283,7 +300,7 @@ def apply_security_headers(response):
     return response
 
 # 单文件数据存储；同一进程内的写操作锁，避免并发提交造成超额预约
-STORE_FILE = BASE_DIR / 'data.json'
+STORE_FILE = Path(os.environ.get('AQS_DATA_FILE') or (BASE_DIR / 'data.json'))
 write_lock = threading.RLock()
 
 
@@ -553,13 +570,45 @@ def remove_reserved(grade, teacher_id, parent_name, persist_now=True):
         persist()
 
 
-def build_parent_schedule(grade, parent_name):
+def class_start_dt(cfg, class_name):
+    """班级对应的叫号起点，未单独配置时使用年级默认值"""
+    return cfg['conversion_start_by_class'].get(class_name, cfg['conversion_start_dt'])
+
+
+def parent_class_name(grade, parent_name):
+    """从“班级+姓名”的家长标识中解析班级"""
+    for class_name in sorted(GRADES[grade]['classes'], key=len, reverse=True):
+        if parent_name.startswith(class_name):
+            return class_name
+    return ''
+
+
+def build_queue_times(grade, queue):
+    """按队列顺序推算每位未完成家长的预计时间，兼顾不同班级的开始时间"""
+    cfg = GRADES[grade]
+    times = []
+    current = None
+    for item in queue:
+        if item.get('status') == 'completed':
+            times.append(None)
+            continue
+        class_start = class_start_dt(cfg, parent_class_name(grade, item.get('name', '')))
+        slot = class_start if current is None else max(
+            class_start, current + timedelta(minutes=cfg['meeting_duration'])
+        )
+        times.append(slot)
+        current = slot
+    return times
+
+
+def build_parent_schedule(grade, parent_name, class_name=''):
     """构建家长端展示用的预约明细（实时状态与等待人数）"""
     cfg = GRADES[grade]
     doc = parent_coll(grade).get(parent_name)
     if doc is None:
         return []
 
+    start_dt = class_start_dt(cfg, class_name or parent_class_name(grade, parent_name))
     status_text = {'waiting': '等待中', 'current': '进行中', 'completed': '已完成'}
     schedule = []
     for field, is_must in (('must', True), ('appointment', False)):
@@ -569,23 +618,26 @@ def build_parent_schedule(grade, parent_name):
             if teacher is None:
                 continue
             queue = get_teacher_queue(grade, teacher_id)
+            queue_times = build_queue_times(grade, queue)
             position = None
             status = record.get('status', 'waiting')
+            slot = None
             for index, item in enumerate(queue):
                 if item.get('name') == parent_name:
                     position = index
                     status = item.get('status', 'waiting')
+                    slot = queue_times[index]
                     break
             if position is None:
                 waiting = int(record.get('ranking', 0))
+                slot = start_dt + timedelta(minutes=waiting * cfg['meeting_duration'])
             else:
                 waiting = sum(1 for item in queue[:position] if item.get('status') != 'completed')
 
-            if status == 'completed':
+            if status == 'completed' or slot is None:
                 estimated = '已完成'
             else:
-                estimated_dt = cfg['conversion_start_dt'] + timedelta(minutes=waiting * cfg['meeting_duration'])
-                estimated = estimated_dt.strftime('%H:%M')
+                estimated = slot.strftime('%H:%M')
 
             schedule.append({
                 'teacher_id': record.get('teacher_id'),
@@ -630,6 +682,13 @@ def build_appointment_records(grade, parent_name, field):
 @app.route('/favicon.ico')
 def favicon():
     return send_file(BASE_DIR / 'static' / 'images' / 'icon.png', mimetype='image/vnd.microsoft.icon')
+
+
+@app.route('/')
+def index():
+    if request.query_string:
+        return redirect('/login?' + request.query_string.decode('utf-8'))
+    return redirect('/login')
 
 
 @app.route('/login')
@@ -739,7 +798,7 @@ def parent():
     if cfg is None:
         return redirect('/login')
 
-    schedule = build_parent_schedule(current_grade(), session['id'])
+    schedule = build_parent_schedule(current_grade(), session['id'], session.get('className', ''))
     parent_doc = parent_coll(current_grade()).get(session['id'])
     can_modify = cfg['allow_modify_after_save'] or not (parent_doc and parent_doc.get('appointment'))
     return render_template(
@@ -782,6 +841,7 @@ def appointment():
     if not cfg['allow_modify_after_save'] and parent_doc and parent_doc.get('appointment'):
         return redirect('/parent')
 
+    start_dt = class_start_dt(cfg, session.get('className', ''))
     return render_template(
         'appointment.html',
         t_name=session.get('name', ''),
@@ -793,7 +853,7 @@ def appointment():
         t_appointment=build_appointment_records(current_grade(), session['id'], 'appointment'),
         t_must=build_appointment_records(current_grade(), session['id'], 'must'),
         t_setting=teacher_settings_payload(current_grade()),
-        t_start_time=cfg['conversion_start'],
+        t_start_time=start_dt.strftime('%Y-%m-%dT%H:%M:%S'),
         t_meeting_duration=cfg['meeting_duration'],
         t_max_selectable=cfg['max_selectable']
     )
@@ -835,7 +895,7 @@ def save():
         if teacher is None:
             return jsonify({'success': False, 'message': '包含无效的老师'})
         if class_name not in teacher.get('class', []):
-            return jsonify({'success': False, 'message': f'{teacher.get("name", "")}老师不负责该班级'})
+            return jsonify({'success': False, 'message': f'{teacher.get("name", "")}不负责该班级'})
 
     grade = current_grade()
     parent_name = session['id']
@@ -919,15 +979,19 @@ def ontime():
 def teacher_list():
     if not session.get('teacher_verified') or not session.get('id'):
         return redirect('/login')
-    cfg = current_cfg()
-    if cfg is None:
+    if current_cfg() is None:
         return redirect('/login')
+    queue = get_teacher_queue(current_grade(), session['id'])
+    queue_times = build_queue_times(current_grade(), queue)
+    queue_view = []
+    for item, slot in zip(queue, queue_times):
+        record = dict(item)
+        record['appointmentTime'] = slot.strftime('%H:%M') if slot else '-'
+        queue_view.append(record)
     return render_template(
         'list.html',
         t_grade=current_grade(),
-        t_queue=get_teacher_queue(current_grade(), session['id']),
-        t_start_time=cfg['conversion_start'],
-        t_meeting_duration=cfg['meeting_duration']
+        t_queue=queue_view
     )
 
 
@@ -1136,16 +1200,9 @@ def list_download():
     }
 
     data_list = []
-    active_position = 0
-    for index, item in enumerate(queue, 1):
-        if item.get('status') == 'completed':
-            estimated_time = '-'
-        else:
-            appointment_datetime = cfg['conversion_start_dt'] + timedelta(
-                minutes=active_position * cfg['meeting_duration']
-            )
-            estimated_time = appointment_datetime.strftime('%H:%M')
-            active_position += 1
+    queue_times = build_queue_times(current_grade(), queue)
+    for index, (item, slot) in enumerate(zip(queue, queue_times), 1):
+        estimated_time = slot.strftime('%H:%M') if slot else '-'
         data_list.append({
             '序号': index,
             '学生姓名': item.get('name', ''),

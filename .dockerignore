@@ -1,0 +1,10 @@
+.git
+.gitignore
+test
+.screenshots
+__pycache__
+*.pyc
+log
+data
+data.json
+*.tar.gz
